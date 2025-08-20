@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load money %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-users me-2"></i>
+        Liste des Clients
+    </h2>
+    <a href="{% url 'ventes:client_create' %}" class="btn btn-success">
+        <i class="fas fa-user-plus me-2"></i>
+        Nouveau Client
+    </a>
+</div>
+
+<!-- Recherche -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search" 
+                       placeholder="Rechercher par nom, téléphone..." 
+                       value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="type_client" class="form-select">
+                    <option value="">Tous les types</option>
+                    <option value="particulier" {% if request.GET.type_client == "particulier" %}selected{% endif %}>
+                        Particulier
+                    </option>
+                    <option value="entreprise" {% if request.GET.type_client == "entreprise" %}selected{% endif %}>
+                        Entreprise
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>
+                    Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des clients -->
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nom complet</th>
+                            <th>Téléphone</th>
+                            <th>Email</th>
+                            <th>Type</th>
+                            <th>Limite crédit</th>
+                            <th>Crédit actuel</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for client in page_obj %}
+                        <tr>
+                            <td>
+                                <strong>{{ client.nom }}</strong>
+                                {% if client.prenom %}
+                                    {{ client.prenom }}
+                                {% endif %}
+                            </td>
+                            <td>{{ client.telephone|default:"-" }}</td>
+                            <td>{{ client.email|default:"-" }}</td>
+                            <td>
+                                {% if client.type_client == 'particulier' %}
+                                    <span class="badge bg-info">Particulier</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Entreprise</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ client.limite_credit|fcfa0 }} FCFA</td>
+                            <td>
+                                {% if client.credit_actuel > 0 %}
+                                    <span class="text-warning">
+                                        {{ client.credit_actuel|fcfa0 }} FCFA
+                                    </span>
+                                {% else %}
+                                    <span class="text-success">0 FCFA</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary" title="Voir détails">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    {% if client.credit_actuel > 0 %}
+                                        <a href="{% url 'credits:credit_list' %}?client={{ client.pk }}" 
+                                           class="btn btn-outline-warning" title="Voir crédits">
+                                            <i class="fas fa-credit-card"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Navigation des pages">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun client trouvé</h5>
+                <p class="text-muted">Commencez par ajouter votre premier client</p>
+                <a href="{% url 'ventes:client_create' %}" class="btn btn-success">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Nouveau Client
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

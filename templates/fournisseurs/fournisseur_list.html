@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-truck me-2"></i>
+        Liste des Fournisseurs
+    </h2>
+    <a href="{% url 'fournisseurs:fournisseur_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>
+        Nouveau Fournisseur
+    </a>
+</div>
+
+<!-- Barre de recherche -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" class="form-control" name="search" 
+                       placeholder="Rechercher par nom, téléphone ou email..." 
+                       value="{{ search }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-search me-2"></i>
+                    Rechercher
+                </button>
+                {% if search %}
+                    <a href="{% url 'fournisseurs:fournisseur_list' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-times"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des fournisseurs -->
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nom</th>
+                            <th>Téléphone</th>
+                            <th>Email</th>
+                            <th>Date d'enregistrement</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fournisseur in page_obj %}
+                        <tr>
+                            <td>
+                                <strong>{{ fournisseur.nom }}</strong>
+                                {% if fournisseur.adresse %}
+                                    <br><small class="text-muted">{{ fournisseur.adresse|truncatechars:50 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ fournisseur.telephone|default:"—" }}</td>
+                            <td>{{ fournisseur.email|default:"—" }}</td>
+                            <td>{{ fournisseur.date_creation|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'fournisseurs:fournisseur_edit' fournisseur.pk %}" 
+                                       class="btn btn-outline-primary" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'fournisseurs:livraison_create' %}?fournisseur={{ fournisseur.pk }}" 
+                                       class="btn btn-outline-success" title="Nouvelle livraison">
+                                        <i class="fas fa-truck"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Navigation des pages">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun fournisseur trouvé</h5>
+                <p class="text-muted">
+                    {% if search %}
+                        Aucun résultat pour "{{ search }}"
+                    {% else %}
+                        Commencez par ajouter votre premier fournisseur
+                    {% endif %}
+                </p>
+                <a href="{% url 'fournisseurs:fournisseur_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Ajouter un fournisseur
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-truck-loading fa-2x text-primary mb-2"></i>
+                <h6>Livraisons</h6>
+                <a href="{% url 'fournisseurs:livraison_list' %}" class="btn btn-sm btn-outline-primary">
+                    Voir les livraisons
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-2x text-success mb-2"></i>
+                <h6>Statistiques</h6>
+                <a href="{% url 'fournisseurs:statistiques' %}" class="btn btn-sm btn-outline-success">
+                    Voir les statistiques
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

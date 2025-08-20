@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-car me-2"></i>
+        Parc Motorisé
+    </h2>
+    <div>
+        <a href="#" class="btn btn-success me-2">
+            <i class="fas fa-plus me-2"></i>
+            Nouveau Véhicule
+        </a>
+        <a href="#" class="btn btn-primary">
+            <i class="fas fa-gas-pump me-2"></i>
+            Nouveau Carburant
+        </a>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Véhicules</h6>
+                        <h4><span class="format-number">{{ total_vehicules|default:0 }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-car fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Carburant Mois</h6>
+                        <h4><span class="format-number">{{ carburant_mois|default:0|floatformat:0 }}</span> GNF</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-gas-pump fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Véhicules Actifs</h6>
+                        <h4><span class="format-number">{{ vehicules_actifs|default:0 }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Km Total Mois</h6>
+                        <h4><span class="format-number">{{ km_total_mois|default:0 }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-road fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des véhicules -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            Liste des Véhicules
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if vehicules %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Immatriculation</th>
+                            <th>Marque & Modèle</th>
+                            <th>Type</th>
+                            <th>Année</th>
+                            <th>Kilométrage</th>
+                            <th>Consommation</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicule in vehicules %}
+                        <tr class="{% if vehicule.statut == 'maintenance' %}table-warning{% elif vehicule.statut == 'inactif' %}table-secondary{% endif %}">
+                            <td>
+                                <strong>{{ vehicule.immatriculation }}</strong>
+                            </td>
+                            <td>
+                                <strong>{{ vehicule.marque }} {{ vehicule.modele }}</strong>
+                                {% if vehicule.couleur %}
+                                    <br><small class="text-muted">{{ vehicule.couleur }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ vehicule.type_vehicule }}</span>
+                            </td>
+                            <td>{{ vehicule.annee }}</td>
+                            <td>
+                                <span class="format-number">{{ vehicule.kilometrage|floatformat:0 }}</span> km
+                            </td>
+                            <td>
+                                {% if vehicule.consommation_moyenne %}
+                                    <span class="format-number">{{ vehicule.consommation_moyenne|floatformat:1 }}</span> L/100km
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if vehicule.statut == 'actif' %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% elif vehicule.statut == 'maintenance' %}
+                                    <span class="badge bg-warning">Maintenance</span>
+                                {% elif vehicule.statut == 'inactif' %}
+                                    <span class="badge bg-danger">Inactif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ vehicule.statut|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-outline-info" title="Détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-success" title="Nouveau carburant">
+                                        <i class="fas fa-gas-pump"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-car fa-3x mb-3"></i>
+                <h5>Aucun véhicule trouvé</h5>
+                <p>Commencez par ajouter des véhicules à votre parc</p>
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>
+                    Premier véhicule
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-plus fa-2x text-success mb-2"></i>
+                <h6>Nouveau Véhicule</h6>
+                <a href="#" class="btn btn-sm btn-outline-success">
+                    Ajouter véhicule
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-gas-pump fa-2x text-primary mb-2"></i>
+                <h6>Gestion Carburant</h6>
+                <a href="#" class="btn btn-sm btn-outline-primary">
+                    Voir carburants
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-wrench fa-2x text-warning mb-2"></i>
+                <h6>Maintenance</h6>
+                <a href="#" class="btn btn-sm btn-outline-warning">
+                    Gérer maintenance
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-2x text-info mb-2"></i>
+                <h6>Statistiques</h6>
+                <a href="#" class="btn btn-sm btn-outline-info">
+                    Voir stats
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonction pour formater les nombres avec des espaces
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+// Formater tous les nombres au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    const numberElements = document.querySelectorAll('.format-number');
+    numberElements.forEach(function(element) {
+        const number = element.textContent.trim();
+        if (number && !isNaN(number)) {
+            element.textContent = formatNumber(number);
+        }
+    });
+});
+</script>
+{% endblock %}

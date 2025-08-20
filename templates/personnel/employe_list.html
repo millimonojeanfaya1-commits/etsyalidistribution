@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-users me-2"></i>
+        Gestion du Personnel
+    </h2>
+    <div>
+        <a href="{% url 'personnel:employe_create' %}" class="btn btn-success me-2">
+            <i class="fas fa-user-plus me-2"></i>
+            Nouvel Employé
+        </a>
+        <a href="{% url 'personnel:paie_create' %}" class="btn btn-primary">
+            <i class="fas fa-money-bill-wave me-2"></i>
+            Nouvelle Paie
+        </a>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Employés</h6>
+                        <h4><span class="format-number">{{ total_employes|default:0 }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Salaires Mois</h6>
+                        <h4><span class="format-number">{{ salaires_mois|default:0|floatformat:0 }}</span> GNF</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Employés Actifs</h6>
+                        <h4><span class="format-number">{{ employes_actifs|default:0 }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Départements</h6>
+                        <h4><span class="format-number">{{ total_departements|default:0 }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-building fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des employés -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            Liste des Employés
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if employes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Matricule</th>
+                            <th>Nom & Prénom</th>
+                            <th>Poste</th>
+                            <th>Département</th>
+                            <th>Salaire Base</th>
+                            <th>Date d'Embauche</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employe in employes %}
+                        <tr>
+                            <td>
+                                <strong>{{ employe.matricule }}</strong>
+                            </td>
+                            <td>
+                                <strong>{{ employe.nom }} {{ employe.prenom }}</strong>
+                                {% if employe.email %}
+                                    <br><small class="text-muted">{{ employe.email }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ employe.poste }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ employe.departement }}</span>
+                            </td>
+                            <td>
+                                <strong class="text-success format-number">{{ employe.salaire_base|floatformat:0 }}</strong> GNF
+                            </td>
+                            <td>{{ employe.date_embauche|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if employe.statut == 'actif' %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% elif employe.statut == 'inactif' %}
+                                    <span class="badge bg-danger">Inactif</span>
+                                {% elif employe.statut == 'conge' %}
+                                    <span class="badge bg-warning">En congé</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ employe.statut|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-outline-info" title="Détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-success" title="Nouveau salaire">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <h5>Aucun employé trouvé</h5>
+                <p>Commencez par ajouter des employés à votre équipe</p>
+                <a href="{% url 'personnel:employe_create' %}" class="btn btn-success">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Premier employé
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-user-plus fa-2x text-success mb-2"></i>
+                <h6>Nouvel Employé</h6>
+                <a href="{% url 'personnel:employe_create' %}" class="btn btn-sm btn-outline-success">
+                    Ajouter employé
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-money-bill-wave fa-2x text-primary mb-2"></i>
+                <h6>Gestion Salaires</h6>
+                <a href="{% url 'personnel:paie_list' %}" class="btn btn-sm btn-outline-primary">
+                    Voir paies
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt fa-2x text-warning mb-2"></i>
+                <h6>Congés & Absences</h6>
+                <a href="{% url 'personnel:conge_list' %}" class="btn btn-sm btn-outline-warning">
+                    Gérer congés
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-2x text-info mb-2"></i>
+                <h6>Statistiques RH</h6>
+                <a href="{% url 'personnel:statistiques' %}" class="btn btn-sm btn-outline-info">
+                    Voir stats
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonction pour formater les nombres avec des espaces
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+// Formater tous les nombres au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    const numberElements = document.querySelectorAll('.format-number');
+    numberElements.forEach(function(element) {
+        const number = element.textContent.trim();
+        if (number && !isNaN(number)) {
+            element.textContent = formatNumber(number);
+        }
+    });
+});
+</script>
+{% endblock %}

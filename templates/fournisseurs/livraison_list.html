@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load money %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-truck-loading me-2"></i>
+        Historique des Livraisons
+    </h2>
+    <a href="{% url 'fournisseurs:livraison_create' %}" class="btn btn-success">
+        <i class="fas fa-plus me-2"></i>
+        Nouvelle Livraison
+    </a>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Achats</h6>
+                        <h4>{{ total_achats|fcfa0 }} FCFA</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Nombre de Livraisons</h6>
+                        <h4>{{ page_obj.paginator.count|default:0 }}</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-truck fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Fournisseurs Actifs</h6>
+                        <h4>{{ fournisseurs.count|default:0 }}</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Fournisseur</label>
+                <select name="fournisseur" class="form-select">
+                    <option value="">Tous les fournisseurs</option>
+                    {% for fournisseur in fournisseurs %}
+                        <option value="{{ fournisseur.id }}" {% if filters.fournisseur == fournisseur.id|stringformat:"s" %}selected{% endif %}>
+                            {{ fournisseur.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date début</label>
+                <input type="date" class="form-control" name="date_debut" value="{{ filters.date_debut }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date fin</label>
+                <input type="date" class="form-control" name="date_fin" value="{{ filters.date_fin }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtrer
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des livraisons -->
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>N° Enregistrement</th>
+                            <th>Date</th>
+                            <th>Fournisseur</th>
+                            <th>Produit</th>
+                            <th>Quantité</th>
+                            <th>Prix Unitaire</th>
+                            <th>Montant Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for livraison in page_obj %}
+                        <tr>
+                            <td><strong>{{ livraison.numero_enregistrement }}</strong></td>
+                            <td>{{ livraison.date|date:"d/m/Y" }}</td>
+                            <td>{{ livraison.fournisseur.nom }}</td>
+                            <td>{{ livraison.produit.nom }}</td>
+                            <td>{{ livraison.quantite_livree }} {{ livraison.produit.unite_mesure }}</td>
+                            <td>{{ livraison.prix_achat_unitaire|fcfa0 }} FCFA</td>
+                            <td><strong>{{ livraison.montant_total_achat|fcfa0 }} FCFA</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-truck-loading fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucune livraison trouvée</h5>
+                <p class="text-muted">Commencez par enregistrer votre première livraison</p>
+                <a href="{% url 'fournisseurs:livraison_create' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>
+                    Nouvelle Livraison
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

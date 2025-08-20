@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+*.pot
+*.pyc
+*.mo
+*.sqlite3
+*.sqlite3-journal
+media/
+staticfiles/
+
+# Virtual environments
+venv/
+.env/
+.envrc
+.venv/
+ENV/
+env/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# OneDrive temp files
+~$*
+
+# Coverage / testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Migrations cache (keep actual migration files)
+*/migrations/__pycache__/
+
+# Local settings
+*.local
+.env.local

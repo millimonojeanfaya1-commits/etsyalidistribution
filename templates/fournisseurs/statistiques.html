@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-chart-bar me-2"></i>
+        Statistiques des Fournisseurs
+    </h2>
+    <a href="{% url 'fournisseurs:fournisseur_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Retour aux fournisseurs
+    </a>
+</div>
+
+<!-- Statistiques générales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Fournisseurs</h6>
+                        <h4><span class="format-number">{{ total_fournisseurs }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-truck fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Livraisons</h6>
+                        <h4><span class="format-number">{{ total_livraisons }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-boxes fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Montant Total Achats</h6>
+                        <h4><span class="format-number">{{ montant_total_achats|floatformat:0 }}</span> GNF</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Produits Différents</h6>
+                        <h4><span class="format-number">{{ produits_differents }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-cube fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top 5 Fournisseurs -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>
+                    Top 5 Fournisseurs (par montant)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_fournisseurs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rang</th>
+                                    <th>Fournisseur</th>
+                                    <th>Livraisons</th>
+                                    <th>Montant Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fournisseur in top_fournisseurs %}
+                                <tr>
+                                    <td>
+                                        {% if forloop.counter == 1 %}
+                                            <i class="fas fa-crown text-warning"></i>
+                                        {% elif forloop.counter == 2 %}
+                                            <i class="fas fa-medal text-secondary"></i>
+                                        {% elif forloop.counter == 3 %}
+                                            <i class="fas fa-award text-warning"></i>
+                                        {% else %}
+                                            {{ forloop.counter }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ fournisseur.nom }}</strong>
+                                        {% if fournisseur.telephone %}
+                                            <br><small class="text-muted">{{ fournisseur.telephone }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ fournisseur.nb_livraisons }}</span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success format-number">{{ fournisseur.total_achats|floatformat:0 }}</strong> GNF
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                        <p>Aucune donnée disponible</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistiques mensuelles -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Évolution Mensuelle (12 derniers mois)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if stats_mensuelles %}
+                    <canvas id="chartMensuel" width="400" height="200"></canvas>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <p>Aucune donnée mensuelle disponible</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Détails par fournisseur -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            Détails par Fournisseur
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if fournisseurs_details %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fournisseur</th>
+                            <th>Contact</th>
+                            <th>Nb Livraisons</th>
+                            <th>Produits Différents</th>
+                            <th>Montant Total</th>
+                            <th>Dernière Livraison</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fournisseur in fournisseurs_details %}
+                        <tr>
+                            <td>
+                                <strong>{{ fournisseur.nom }}</strong>
+                                {% if fournisseur.adresse %}
+                                    <br><small class="text-muted">{{ fournisseur.adresse|truncatechars:50 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if fournisseur.telephone %}
+                                    <i class="fas fa-phone text-primary"></i> {{ fournisseur.telephone }}<br>
+                                {% endif %}
+                                {% if fournisseur.email %}
+                                    <i class="fas fa-envelope text-info"></i> {{ fournisseur.email }}
+                                {% endif %}
+                                {% if not fournisseur.telephone and not fournisseur.email %}
+                                    <span class="text-muted">Non renseigné</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ fournisseur.nb_livraisons|default:0 }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ fournisseur.nb_produits|default:0 }}</span>
+                            </td>
+                            <td>
+                                <strong class="text-success format-number">{{ fournisseur.total_achats|default:0|floatformat:0 }}</strong> GNF
+                            </td>
+                            <td>
+                                {% if fournisseur.derniere_livraison %}
+                                    {{ fournisseur.derniere_livraison|date:"d/m/Y" }}
+                                {% else %}
+                                    <span class="text-muted">Aucune</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'fournisseurs:fournisseur_edit' fournisseur.id %}" class="btn btn-outline-primary" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'fournisseurs:livraison_create' %}?fournisseur={{ fournisseur.id }}" class="btn btn-outline-success" title="Nouvelle livraison">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-truck fa-3x mb-3"></i>
+                <h5>Aucun fournisseur trouvé</h5>
+                <p>Commencez par ajouter des fournisseurs et leurs livraisons</p>
+                <a href="{% url 'fournisseurs:fournisseur_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Ajouter un fournisseur
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-truck fa-2x text-primary mb-2"></i>
+                <h6>Nouveau Fournisseur</h6>
+                <a href="{% url 'fournisseurs:fournisseur_create' %}" class="btn btn-sm btn-outline-primary">
+                    Ajouter un fournisseur
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-boxes fa-2x text-success mb-2"></i>
+                <h6>Nouvelle Livraison</h6>
+                <a href="{% url 'fournisseurs:livraison_create' %}" class="btn btn-sm btn-outline-success">
+                    Enregistrer une livraison
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-list fa-2x text-info mb-2"></i>
+                <h6>Toutes les Livraisons</h6>
+                <a href="{% url 'fournisseurs:livraison_list' %}" class="btn btn-sm btn-outline-info">
+                    Voir les livraisons
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Fonction pour formater les nombres avec des espaces
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+// Formater tous les nombres au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    const numberElements = document.querySelectorAll('.format-number');
+    numberElements.forEach(function(element) {
+        const number = element.textContent.trim();
+        if (number && !isNaN(number)) {
+            element.textContent = formatNumber(number);
+        }
+    });
+    
+    // Graphique mensuel
+    {% if stats_mensuelles %}
+    const ctx = document.getElementById('chartMensuel').getContext('2d');
+    const chartData = {
+        labels: [
+            {% for stat in stats_mensuelles %}
+                '{{ stat.mois|date:"M Y" }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Montant des achats (GNF)',
+            data: [
+                {% for stat in stats_mensuelles %}
+                    {{ stat.total|default:0 }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 2,
+            fill: true
+        }]
+    };
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatNumber(value) + ' GNF';
+                        }
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 4,
+                    hoverRadius: 6
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

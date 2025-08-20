@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-receipt me-2"></i>
+        Gestion des Charges
+    </h2>
+    <div>
+        <a href="#" class="btn btn-success me-2">
+            <i class="fas fa-plus me-2"></i>
+            Nouvelle Charge
+        </a>
+        <a href="#" class="btn btn-primary">
+            <i class="fas fa-chart-bar me-2"></i>
+            Statistiques
+        </a>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Charges</h6>
+                        <h4><span class="format-number">{{ total_charges|default:0 }}</span></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-receipt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Charges Mois</h6>
+                        <h4><span class="format-number">{{ charges_mois|default:0|floatformat:0 }}</span> GNF</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Charges Fixes</h6>
+                        <h4><span class="format-number">{{ charges_fixes|default:0|floatformat:0 }}</span> GNF</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-lock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Charges Variables</h6>
+                        <h4><span class="format-number">{{ charges_variables|default:0|floatformat:0 }}</span> GNF</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des charges -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            Liste des Charges
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if charges %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Libellé</th>
+                            <th>Type</th>
+                            <th>Catégorie</th>
+                            <th>Montant</th>
+                            <th>Fournisseur</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for charge in charges %}
+                        <tr>
+                            <td>{{ charge.date|date:"d/m/Y" }}</td>
+                            <td>
+                                <strong>{{ charge.libelle }}</strong>
+                                {% if charge.description %}
+                                    <br><small class="text-muted">{{ charge.description|truncatechars:50 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-warning">Fixe</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">Général</span>
+                            </td>
+                            <td>
+                                <strong class="format-number">{{ charge.montant|floatformat:0 }}</strong> GNF
+                            </td>
+                            <td>
+                                {% if charge.fournisseur %}
+                                    {{ charge.fournisseur.nom }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-outline-info" title="Détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-receipt fa-3x mb-3"></i>
+                <h5>Aucune charge trouvée</h5>
+                <p>Commencez par enregistrer vos premières charges</p>
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>
+                    Première charge
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Fonction pour formater les nombres avec des espaces
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+// Formater tous les nombres au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    const numberElements = document.querySelectorAll('.format-number');
+    numberElements.forEach(function(element) {
+        const number = element.textContent.trim();
+        if (number && !isNaN(number)) {
+            element.textContent = formatNumber(number);
+        }
+    });
+});
+</script>
+{% endblock %}

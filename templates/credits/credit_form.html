@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h4 class="mb-0">
+          <i class="fas fa-file-invoice-dollar me-2"></i>
+          {{ title }}
+        </h4>
+        <a href="{% url 'credits:credit_list' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-list me-1"></i> Liste des crédits
+        </a>
+      </div>
+      <div class="card-body">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {% if message.tags == 'error' %}
+                <i class="fas fa-exclamation-triangle me-2"></i>
+              {% elif message.tags == 'success' %}
+                <i class="fas fa-check-circle me-2"></i>
+              {% endif %}
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" id="creditForm" novalidate>
+          {% csrf_token %}
+          {{ form|crispy }}
+
+          <div class="d-flex justify-content-between mt-3">
+            <a href="{% url 'credits:credit_list' %}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left me-2"></i> Retour
+            </a>
+            <button type="submit" class="btn btn-warning">
+              <i class="fas fa-save me-2"></i> Enregistrer le crédit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Champs
+    const numero = document.getElementById('id_numero');
+    const dateEl = document.getElementById('id_date');
+    const quantite = document.getElementById('id_quantite');
+    const prix = document.getElementById('id_prix_unitaire');
+
+    // Définir la date max = aujourd'hui
+    if (dateEl) {
+      const today = new Date().toISOString().split('T')[0];
+      if (!dateEl.value) dateEl.value = today;
+      dateEl.setAttribute('max', today);
+    }
+
+    // Pattern pour le numéro (ex: CRD0001)
+    if (numero) {
+      numero.setAttribute('pattern', '^CRD\\\d{4,}$');
+      numero.setAttribute('title', 'Format attendu: CRD0001');
+    }
+
+    // Min pour quantite et prix
+    if (quantite) quantite.setAttribute('min', '0.01');
+    if (prix) prix.setAttribute('min', '0.01');
+
+    // Validation simple avant soumission
+    const form = document.getElementById('creditForm');
+    form.addEventListener('submit', function(e) {
+      let valid = true;
+
+      if (numero && !/^CRD\d{4,}$/.test((numero.value || '').trim())) {
+        numero.classList.add('is-invalid');
+        valid = false;
+      } else if (numero) {
+        numero.classList.remove('is-invalid');
+      }
+
+      if (dateEl) {
+        const today = new Date().toISOString().split('T')[0];
+        if (dateEl.value > today) {
+          dateEl.classList.add('is-invalid');
+          valid = false;
+        } else {
+          dateEl.classList.remove('is-invalid');
+        }
+      }
+
+      const q = parseFloat(quantite ? quantite.value : '0') || 0;
+      const p = parseFloat(prix ? prix.value : '0') || 0;
+      if (quantite && !(q > 0)) { quantite.classList.add('is-invalid'); valid = false; } else if (quantite) { quantite.classList.remove('is-invalid'); }
+      if (prix && !(p > 0)) { prix.classList.add('is-invalid'); valid = false; } else if (prix) { prix.classList.remove('is-invalid'); }
+
+      if (!valid) {
+        e.preventDefault();
+      }
+    });
+  });
+</script>
+{% endblock %}

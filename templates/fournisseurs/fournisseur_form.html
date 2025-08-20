@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-truck me-2"></i>
+                    {{ title }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Messages d'erreur/succès -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {% if message.tags == 'error' %}
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% elif message.tags == 'success' %}
+                                <i class="fas fa-check-circle me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" id="fournisseurForm">
+                    {% csrf_token %}
+                    
+                    <!-- Informations du fournisseur -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Informations du Fournisseur
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="id_nom" class="form-label">Nom du fournisseur *</label>
+                                        <input type="text" class="form-control" id="id_nom" name="nom" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="id_telephone" class="form-label">Téléphone</label>
+                                        <input type="text" class="form-control" id="id_telephone" name="telephone">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="id_email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="id_email" name="email">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="id_adresse" class="form-label">Adresse</label>
+                                        <textarea class="form-control" id="id_adresse" name="adresse" rows="2"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Produits fournis -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-boxes me-2"></i>
+                                Produits Fournis
+                            </h5>
+                            <button type="button" class="btn btn-success btn-sm" id="btnAjouterProduit">
+                                <i class="fas fa-plus me-2"></i>
+                                Ajouter un produit
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="produitsContainer">
+                                <!-- Les produits seront ajoutés ici dynamiquement -->
+                                <div class="text-center text-muted py-4" id="emptyMessage">
+                                    <i class="fas fa-box-open fa-3x mb-3"></i>
+                                    <p>Aucun produit ajouté. Cliquez sur "Ajouter un produit" pour commencer.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Récapitulatif total -->
+                            <div class="row mt-4" id="recapitulatif" style="display: none;">
+                                <div class="col-md-6 offset-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Récapitulatif Total</h6>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>Nombre de produits:</span>
+                                                <span id="totalProduits">0</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>Quantité totale:</span>
+                                                <span id="totalQuantite">0</span>
+                                            </div>
+                                            <hr>
+                                            <div class="d-flex justify-content-between">
+                                                <strong>Montant total:</strong>
+                                                <strong id="montantTotal" class="text-primary">0 GNF</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'fournisseurs:fournisseur_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Enregistrer le fournisseur
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter/modifier un produit -->
+<div class="modal fade" id="modalProduit" tabindex="-1" aria-labelledby="modalProduitLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalProduitLabel">
+                    <i class="fas fa-box me-2"></i>
+                    Ajouter un Produit Fourni
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formProduit">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="produit_nom" class="form-label">Produit *</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="produit_nom" name="produit" required>
+                                        <option value="">Sélectionner un produit</option>
+                                        {% for produit in produits %}
+                                            <option value="{{ produit.id }}" data-nom="{{ produit.nom }}">{{ produit.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="button" class="btn btn-outline-warning" id="btnNouveauProduitModal" title="Créer un nouveau produit">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="produit_quantite" class="form-label">Quantité *</label>
+                                <input type="number" step="0.01" class="form-control" id="produit_quantite" name="quantite" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="produit_prix_unitaire" class="form-label">Prix d'achat unitaire *</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control" id="produit_prix_unitaire" name="prix_unitaire" required>
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="produit_montant" class="form-label">Montant total</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control" id="produit_montant" name="montant" readonly>
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                                <div class="form-text">
+                                    <small class="text-muted">Calculé automatiquement</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="produit_observations" class="form-label">Observations</label>
+                        <textarea class="form-control" id="produit_observations" name="observations" rows="2" placeholder="Notes sur ce produit..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="btnSauvegarderProduit">
+                    <i class="fas fa-save me-2"></i>
+                    Ajouter le produit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let produitCounter = 0;
+let produits = [];
+
+// Fonction pour calculer le montant dans le modal
+function calculerMontantModal() {
+    const quantite = parseFloat(document.getElementById('produit_quantite').value) || 0;
+    const prixUnitaire = parseFloat(document.getElementById('produit_prix_unitaire').value) || 0;
+    const montant = quantite * prixUnitaire;
+    
+    document.getElementById('produit_montant').value = montant.toFixed(2);
+}
+
+// Fonction pour formater les nombres avec des espaces
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+// Fonction pour mettre à jour le récapitulatif
+function mettreAJourRecapitulatif() {
+    const totalProduits = produits.length;
+    const totalQuantite = produits.reduce((sum, p) => sum + parseFloat(p.quantite), 0);
+    const montantTotal = produits.reduce((sum, p) => sum + parseFloat(p.montant), 0);
+    
+    document.getElementById('totalProduits').textContent = totalProduits;
+    document.getElementById('totalQuantite').textContent = formatNumber(totalQuantite.toFixed(2));
+    document.getElementById('montantTotal').textContent = formatNumber(montantTotal.toFixed(0)) + ' GNF';
+    
+    // Afficher/masquer le récapitulatif
+    const recap = document.getElementById('recapitulatif');
+    const emptyMessage = document.getElementById('emptyMessage');
+    
+    if (totalProduits > 0) {
+        recap.style.display = 'block';
+        emptyMessage.style.display = 'none';
+    } else {
+        recap.style.display = 'none';
+        emptyMessage.style.display = 'block';
+    }
+}
+
+// Fonction pour afficher les produits
+function afficherProduits() {
+    const container = document.getElementById('produitsContainer');
+    const emptyMessage = document.getElementById('emptyMessage');
+    
+    if (produits.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-4" id="emptyMessage"><i class="fas fa-box-open fa-3x mb-3"></i><p>Aucun produit ajouté. Cliquez sur "Ajouter un produit" pour commencer.</p></div>';
+        return;
+    }
+    
+    let html = '';
+    produits.forEach((produit, index) => {
+        html += `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <strong>${produit.nom}</strong>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">Quantité:</small><br>
+                            <span>${formatNumber(produit.quantite)}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">Prix unitaire:</small><br>
+                            <span>${formatNumber(produit.prix_unitaire)} GNF</span>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">Montant:</small><br>
+                            <strong class="text-primary">${formatNumber(produit.montant)} GNF</strong>
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted">Observations:</small><br>
+                            <span class="text-muted">${produit.observations || 'Aucune'}</span>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="supprimerProduit(${index})" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    mettreAJourRecapitulatif();
+}
+
+// Fonction pour supprimer un produit
+function supprimerProduit(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+        produits.splice(index, 1);
+        afficherProduits();
+    }
+}
+
+// Événements pour le calcul automatique dans le modal
+document.getElementById('produit_quantite').addEventListener('input', calculerMontantModal);
+document.getElementById('produit_prix_unitaire').addEventListener('input', calculerMontantModal);
+
+// Ouvrir le modal pour ajouter un produit
+document.getElementById('btnAjouterProduit').addEventListener('click', function() {
+    document.getElementById('formProduit').reset();
+    calculerMontantModal();
+    const modal = new bootstrap.Modal(document.getElementById('modalProduit'));
+    modal.show();
+});
+
+// Sauvegarder un produit
+document.getElementById('btnSauvegarderProduit').addEventListener('click', function() {
+    const produitSelect = document.getElementById('produit_nom');
+    const produitId = produitSelect.value;
+    const produitNom = produitSelect.options[produitSelect.selectedIndex].getAttribute('data-nom') || produitSelect.options[produitSelect.selectedIndex].text;
+    const quantite = document.getElementById('produit_quantite').value;
+    const prixUnitaire = document.getElementById('produit_prix_unitaire').value;
+    const montant = document.getElementById('produit_montant').value;
+    const observations = document.getElementById('produit_observations').value;
+    
+    if (!produitId || !quantite || !prixUnitaire) {
+        alert('Veuillez remplir tous les champs obligatoires.');
+        return;
+    }
+    
+    // Ajouter le produit à la liste
+    produits.push({
+        id: produitId,
+        nom: produitNom,
+        quantite: quantite,
+        prix_unitaire: prixUnitaire,
+        montant: montant,
+        observations: observations
+    });
+    
+    // Fermer le modal et rafraîchir l'affichage
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalProduit'));
+    modal.hide();
+    
+    afficherProduits();
+    
+    // Message de succès
+    showSuccessMessage('Produit "' + produitNom + '" ajouté avec succès !');
+});
+
+// Fonction pour afficher un message de succès
+function showSuccessMessage(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const cardBody = document.querySelector('.card-body');
+    cardBody.insertBefore(alertDiv, cardBody.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Validation du formulaire avant soumission
+document.getElementById('fournisseurForm').addEventListener('submit', function(e) {
+    const nom = document.getElementById('id_nom').value.trim();
+    
+    if (!nom) {
+        e.preventDefault();
+        alert('Le nom du fournisseur est obligatoire.');
+        return;
+    }
+    
+    // Ajouter les produits au formulaire comme champs cachés
+    produits.forEach((produit, index) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = `produits[${index}]`;
+        input.value = JSON.stringify(produit);
+        this.appendChild(input);
+    });
+});
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    afficherProduits();
+});
+</script>
+{% endblock %}

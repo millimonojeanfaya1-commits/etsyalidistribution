@@ -1,0 +1,442 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-boxes me-2"></i>
+                    Mouvement de Stock
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="stockForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_numero" class="form-label">N° *</label>
+                                <input type="text" class="form-control" id="id_numero" name="numero" value="STK0001" required pattern="^STK\\d{4,}$" title="Format attendu: STK0001">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_date" class="form-label">Date *</label>
+                                <input type="date" class="form-control" id="id_date" name="date" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_magasin" class="form-label">Magasin *</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="id_magasin" name="magasin" required>
+                                        <option value="">Sélectionner un magasin</option>
+                                        <option value="MAGASIN N°1">MAGASIN N°1</option>
+                                        <option value="MAGASIN N°2">MAGASIN N°2</option>
+                                        <option value="MAGASIN N°3">MAGASIN N°3</option>
+                                        <option value="MAGASIN N°4">MAGASIN N°4</option>
+                                        <option value="MAGASIN N°5">MAGASIN N°5</option>
+                                        <option value="MAGASIN N°6">MAGASIN N°6</option>
+                                        <option value="MAGASIN N°7">MAGASIN N°7</option>
+                                        <option value="MAGASIN N°8">MAGASIN N°8</option>
+                                        <option value="MAGASIN N°9">MAGASIN N°9</option>
+                                        <option value="MAGASIN N°10">MAGASIN N°10</option>
+                                    </select>
+                                    <button class="btn btn-outline-primary" type="button" id="btnAddMagasin" data-bs-toggle="modal" data-bs-target="#modalAddMagasin" title="Ajouter un magasin">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_commercial" class="form-label">Commercial *</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="id_commercial" name="commercial" required>
+                                        <option value="">Sélectionner un commercial</option>
+                                        <option value="MAMOUDOU DANSOKO">MAMOUDOU DANSOKO</option>
+                                        <option value="SALIOU DIALLO">SALIOU DIALLO</option>
+                                        <option value="MAMOUDOU DIALLO">MAMOUDOU DIALLO</option>
+                                        <option value="IBRAHIMA DIALLO">IBRAHIMA DIALLO</option>
+                                        <option value="ELHADJI SOW">ELHADJI SOW</option>
+                                    </select>
+                                    <button class="btn btn-outline-primary" type="button" id="btnAddCommercial" data-bs-toggle="modal" data-bs-target="#modalAddCommercial" title="Ajouter un commercial">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_produit" class="form-label">Produit *</label>
+                        <div class="input-group">
+                            <select class="form-select" id="id_produit" name="produit" required>
+                                <option value="">Sélectionner un produit</option>
+                                <option value="RGB">RGB</option>
+                                <option value="PT 44">PT 44</option>
+                                <option value="PT 30">PT 30</option>
+                                <option value="PLAY 44">PLAY 44</option>
+                                <option value="PLAY 30">PLAY 30</option>
+                                <option value="CANETTE">CANETTE</option>
+                                <option value="PET 1.25">PET 1.25</option>
+                            </select>
+                            <button class="btn btn-outline-primary" type="button" id="btnAddProduit" data-bs-toggle="modal" data-bs-target="#modalAddProduit" title="Ajouter un produit">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_stock_initial" class="form-label">Stock initial *</label>
+                                <input type="number" step="0.01" class="form-control" id="id_stock_initial" name="stock_initial" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_stock_vendu" class="form-label">Stock vendu *</label>
+                                <input type="number" step="0.01" class="form-control" id="id_stock_vendu" name="stock_vendu" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_stock_final" class="form-label">Stock final</label>
+                                <input type="number" step="0.01" class="form-control" id="id_stock_final" name="stock_final" readonly>
+                                <div class="form-text">Calculé automatiquement</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_montant_ventes" class="form-label">Montant des ventes</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control" id="id_montant_ventes" name="montant_ventes" value="0">
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_prix_unitaire_moyen" class="form-label">Prix unitaire moyen</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control" id="id_prix_unitaire_moyen" name="prix_unitaire_moyen" readonly>
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                                <div class="form-text">Calculé automatiquement</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_observations" class="form-label">Observations</label>
+                        <textarea class="form-control" id="id_observations" name="observations" rows="3" placeholder="Commentaires ou observations sur ce mouvement de stock..."></textarea>
+                    </div>
+                    
+                    <!-- Récapitulatif -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Récapitulatif du mouvement
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Stock initial:</span>
+                                        <span id="recap-stock-initial">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Stock vendu:</span>
+                                        <span id="recap-stock-vendu" class="text-danger">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <strong>Stock final:</strong>
+                                        <strong id="recap-stock-final" class="text-success">0</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Montant des ventes:</span>
+                                        <span id="recap-montant">0 FCFA</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Prix unitaire moyen:</span>
+                                        <span id="recap-prix-moyen">0 FCFA</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <strong>Taux de rotation:</strong>
+                                        <strong id="recap-taux-rotation" class="text-info">0%</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'stocks:mouvement_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Retour
+                        </a>
+                        <div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>
+                                Enregistrer
+                            </button>
+                            <button type="button" class="btn btn-warning" id="btnReinitialiser">
+                                <i class="fas fa-redo me-2"></i>
+                                Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals: Ajouter Magasin / Produit / Commercial -->
+<div class="modal fade" id="modalAddMagasin" tabindex="-1" aria-labelledby="labelAddMagasin" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="labelAddMagasin">Ajouter un Magasin</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label for="inputAddMagasin" class="form-label">Nom du magasin</label>
+        <input type="text" class="form-control" id="inputAddMagasin" placeholder="Ex: MAGASIN N°11">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" id="saveAddMagasin">Ajouter</button>
+      </div>
+    </div>
+  </div>
+ </div>
+
+<div class="modal fade" id="modalAddProduit" tabindex="-1" aria-labelledby="labelAddProduit" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="labelAddProduit">Ajouter un Produit</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label for="inputAddProduit" class="form-label">Nom du produit</label>
+        <input type="text" class="form-control" id="inputAddProduit" placeholder="Ex: NOUVEAU PRODUIT">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" id="saveAddProduit">Ajouter</button>
+      </div>
+    </div>
+  </div>
+ </div>
+
+<div class="modal fade" id="modalAddCommercial" tabindex="-1" aria-labelledby="labelAddCommercial" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="labelAddCommercial">Ajouter un Commercial</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label for="inputAddCommercial" class="form-label">Nom du commercial</label>
+        <input type="text" class="form-control" id="inputAddCommercial" placeholder="Ex: NOUVEAU NOM">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" id="saveAddCommercial">Ajouter</button>
+      </div>
+    </div>
+  </div>
+ </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // Définir la date d'aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    const dateEl = document.getElementById('id_date');
+    dateEl.value = today;
+    dateEl.setAttribute('max', today);
+    
+    // Calculer les valeurs initiales
+    calculerStockFinal();
+    calculerPrixMoyen();
+    mettreAJourRecapitulatif();
+});
+
+// Gestion des modals et ajout dynamique
+document.getElementById('saveAddMagasin').addEventListener('click', function() {
+    const val = document.getElementById('inputAddMagasin').value;
+    if (!val.trim()) { alert('Veuillez saisir un nom de magasin.'); return; }
+    ajouterEtSelectionner('id_magasin', val);
+    document.getElementById('inputAddMagasin').value = '';
+    if (window.bootstrap) {
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAddMagasin'));
+        modal.hide();
+    }
+});
+
+document.getElementById('saveAddProduit').addEventListener('click', function() {
+    const val = document.getElementById('inputAddProduit').value;
+    if (!val.trim()) { alert('Veuillez saisir un nom de produit.'); return; }
+    ajouterEtSelectionner('id_produit', val);
+    document.getElementById('inputAddProduit').value = '';
+    if (window.bootstrap) {
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAddProduit'));
+        modal.hide();
+    }
+});
+
+document.getElementById('saveAddCommercial').addEventListener('click', function() {
+    const val = document.getElementById('inputAddCommercial').value;
+    if (!val.trim()) { alert('Veuillez saisir un nom de commercial.'); return; }
+    ajouterEtSelectionner('id_commercial', val);
+    document.getElementById('inputAddCommercial').value = '';
+    if (window.bootstrap) {
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAddCommercial'));
+        modal.hide();
+    }
+});
+
+// Calculer le stock final
+function calculerStockFinal() {
+    const stockInitial = parseFloat(document.getElementById('id_stock_initial').value) || 0;
+    const stockVendu = parseFloat(document.getElementById('id_stock_vendu').value) || 0;
+    const stockFinal = stockInitial - stockVendu;
+    
+    document.getElementById('id_stock_final').value = stockFinal;
+    
+    // Changer la couleur selon le niveau de stock
+    const stockFinalField = document.getElementById('id_stock_final');
+    stockFinalField.classList.remove('text-success', 'text-warning', 'text-danger');
+    
+    if (stockFinal < 0) {
+        stockFinalField.classList.add('text-danger');
+    } else if (stockFinal < stockInitial * 0.2) {
+        stockFinalField.classList.add('text-warning');
+    } else {
+        stockFinalField.classList.add('text-success');
+    }
+    
+    return stockFinal;
+}
+
+// Calculer le prix unitaire moyen
+function calculerPrixMoyen() {
+    const stockVendu = parseFloat(document.getElementById('id_stock_vendu').value) || 0;
+    const montantVentes = parseFloat(document.getElementById('id_montant_ventes').value) || 0;
+    
+    let prixMoyen = 0;
+    if (stockVendu > 0) {
+        prixMoyen = montantVentes / stockVendu;
+    }
+    
+    document.getElementById('id_prix_unitaire_moyen').value = prixMoyen.toFixed(2);
+    return prixMoyen;
+}
+
+// Calculer le taux de rotation
+function calculerTauxRotation() {
+    const stockInitial = parseFloat(document.getElementById('id_stock_initial').value) || 0;
+    const stockVendu = parseFloat(document.getElementById('id_stock_vendu').value) || 0;
+    
+    let tauxRotation = 0;
+    if (stockInitial > 0) {
+        tauxRotation = (stockVendu / stockInitial) * 100;
+    }
+    
+    return tauxRotation;
+}
+
+// Mettre à jour le récapitulatif
+function mettreAJourRecapitulatif() {
+    const stockInitial = parseFloat(document.getElementById('id_stock_initial').value) || 0;
+    const stockVendu = parseFloat(document.getElementById('id_stock_vendu').value) || 0;
+    const stockFinal = calculerStockFinal();
+    const montantVentes = parseFloat(document.getElementById('id_montant_ventes').value) || 0;
+    const prixMoyen = calculerPrixMoyen();
+    const tauxRotation = calculerTauxRotation();
+    
+    // Mettre à jour l'affichage
+    document.getElementById('recap-stock-initial').textContent = stockInitial.toLocaleString();
+    document.getElementById('recap-stock-vendu').textContent = stockVendu.toLocaleString();
+    document.getElementById('recap-stock-final').textContent = stockFinal.toLocaleString();
+    document.getElementById('recap-montant').textContent = montantVentes.toLocaleString() + ' FCFA';
+    document.getElementById('recap-prix-moyen').textContent = prixMoyen.toLocaleString() + ' FCFA';
+    document.getElementById('recap-taux-rotation').textContent = tauxRotation.toFixed(1) + '%';
+}
+
+// Réinitialiser le formulaire
+function reinitialiserFormulaire() {
+    if (confirm('Êtes-vous sûr de vouloir réinitialiser le formulaire ?')) {
+        document.getElementById('stockForm').reset();
+        
+        // Remettre les valeurs par défaut
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('id_date').value = today;
+        document.getElementById('id_numero').value = 'STK0001';
+        document.getElementById('id_montant_ventes').value = '0';
+        
+        // Recalculer
+        mettreAJourRecapitulatif();
+    }
+}
+
+// Utilitaire: ajouter une option et la sélectionner
+function ajouterEtSelectionner(selectId, valeur) {
+    const select = document.getElementById(selectId);
+    if (!valeur) return;
+    // Éviter doublons (case insensitive)
+    const exists = Array.from(select.options).some(opt => opt.text.trim().toLowerCase() === valeur.trim().toLowerCase());
+    if (!exists) {
+        const opt = document.createElement('option');
+        opt.value = valeur.trim();
+        opt.textContent = valeur.trim();
+        select.appendChild(opt);
+    }
+    select.value = valeur.trim();
+}
+
+// Événements pour les calculs automatiques
+document.getElementById('id_stock_initial').addEventListener('input', mettreAJourRecapitulatif);
+document.getElementById('id_stock_vendu').addEventListener('input', mettreAJourRecapitulatif);
+document.getElementById('id_montant_ventes').addEventListener('input', mettreAJourRecapitulatif);
+
+// Événement pour le bouton réinitialiser
+document.getElementById('btnReinitialiser').addEventListener('click', reinitialiserFormulaire);
+
+// Validation du formulaire
+document.getElementById('stockForm').addEventListener('submit', function(e) {
+    const stockFinal = parseFloat(document.getElementById('id_stock_final').value);
+    const si = parseFloat(document.getElementById('id_stock_initial').value || '0');
+    const sv = parseFloat(document.getElementById('id_stock_vendu').value || '0');
+    const mv = parseFloat(document.getElementById('id_montant_ventes').value || '0');
+    let valid = true;
+    if (si < 0) { document.getElementById('id_stock_initial').classList.add('is-invalid'); valid = false; }
+    if (sv < 0) { document.getElementById('id_stock_vendu').classList.add('is-invalid'); valid = false; }
+    if (mv < 0) { document.getElementById('id_montant_ventes').classList.add('is-invalid'); valid = false; }
+    if (!valid) { e.preventDefault(); return; }
+    
+    if (stockFinal < 0) {
+        if (!confirm('Le stock final est négatif. Voulez-vous vraiment continuer ?')) {
+            e.preventDefault();
+        }
+    }
+});
+</script>
+{% endblock %}

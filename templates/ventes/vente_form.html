@@ -1,0 +1,686 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    Enregistrement de Vente
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Messages d'erreur/succès -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {% if message.tags == 'error' %}
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% elif message.tags == 'success' %}
+                                <i class="fas fa-check-circle me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post" id="venteForm">
+                    {% csrf_token %}
+                    
+                    <div class="form-step" data-step="1">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_numero" class="form-label">N° *</label>
+                                <input type="text" class="form-control" id="id_numero" name="numero" value="VTE0001" required pattern="^VTE\\d{4,}$" title="Format attendu: VTE0001">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_date" class="form-label">Date *</label>
+                                <input type="date" class="form-control" id="id_date" name="date" required>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    
+                    <div class="form-step" data-step="2" style="display:none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_magasin" class="form-label">Magasin *</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="id_magasin" name="magasin" required>
+                                        <option value="">Sélectionner un magasin</option>
+                                        <option value="MAGASIN N°1">MAGASIN N°1</option>
+                                        <option value="MAGASIN N°2">MAGASIN N°2</option>
+                                        <option value="MAGASIN N°3">MAGASIN N°3</option>
+                                        <option value="MAGASIN N°4">MAGASIN N°4</option>
+                                        <option value="MAGASIN N°5">MAGASIN N°5</option>
+                                        <option value="MAGASIN N°6">MAGASIN N°6</option>
+                                        <option value="MAGASIN N°7">MAGASIN N°7</option>
+                                        <option value="MAGASIN N°8">MAGASIN N°8</option>
+                                        <option value="MAGASIN N°9">MAGASIN N°9</option>
+                                        <option value="MAGASIN N°10">MAGASIN N°10</option>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary" id="btnNouveauMagasin" title="Ajouter un nouveau magasin">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    <small>Cliquez sur + pour ajouter un nouveau magasin</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_client" class="form-label">Client *</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="id_client" name="client" required>
+                                        <option value="">Sélectionner un client</option>
+                                        {% for client in clients %}
+                                            <option value="{{ client.id }}">{{ client.nom }} {% if client.prenom %}{{ client.prenom }}{% endif %}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="button" class="btn btn-outline-success" id="btnNouveauClient" title="Ajouter un nouveau client">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    <small>Cliquez sur + pour ajouter un nouveau client</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    
+                    <div class="form-step" data-step="3" style="display:none;">
+                    <div class="mb-3">
+                        <label for="id_produit" class="form-label">Produit *</label>
+                        <div class="input-group">
+                            <select class="form-select" id="id_produit" name="produit" required>
+                                <option value="">Sélectionner un produit</option>
+                                <option value="RGB" data-prix="">RGB</option>
+                                <option value="PT 44" data-prix="">PT 44</option>
+                                <option value="PT 30" data-prix="">PT 30</option>
+                                <option value="PLAY 44" data-prix="">PLAY 44</option>
+                                <option value="PLAY 30" data-prix="">PLAY 30</option>
+                                <option value="CANETTE" data-prix="">CANETTE</option>
+                                <option value="PET 1.25" data-prix="">PET 1.25</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-warning" id="btnNouveauProduit" title="Ajouter un nouveau produit">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <small>Cliquez sur + pour ajouter un nouveau produit</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_quantite_vendue" class="form-label">Quantité vendue *</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="id_quantite_vendue" name="quantite_vendue" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_type_vente" class="form-label">Type de vente *</label>
+                                <select class="form-select" id="id_type_vente" name="type_vente" required>
+                                    <option value="">Sélectionner le type</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="credit">Crédit</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_prix_unitaire" class="form-label">Prix unitaire *</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="id_prix_unitaire" name="prix_unitaire" required>
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total vente -->
+                    <div class="row">
+                        <div class="col-md-6 offset-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Total vente</h6>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Quantité:</span>
+                                        <span id="recap-quantite">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Prix unitaire:</span>
+                                        <span id="recap-prix">0 GNF</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total:</strong>
+                                        <strong id="recap-total" class="text-success">0 GNF</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary" id="btnPrev" disabled>
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Précédent
+                        </button>
+                        <div>
+                            <button type="button" class="btn btn-primary me-2" id="btnNext">
+                                Suivant
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <button type="submit" class="btn btn-success d-none" id="btnSubmit">
+                                <i class="fas fa-check me-2"></i>
+                                Valider
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour créer un nouveau magasin -->
+<div class="modal fade" id="modalNouveauMagasin" tabindex="-1" aria-labelledby="modalNouveauMagasinLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNouveauMagasinLabel">
+                    <i class="fas fa-store me-2"></i>
+                    Nouveau Magasin
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNouveauMagasin">
+                    <div class="mb-3">
+                        <label for="nouveau_magasin_nom" class="form-label">Nom du magasin *</label>
+                        <input type="text" class="form-control" id="nouveau_magasin_nom" name="nom" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nouveau_magasin_adresse" class="form-label">Adresse</label>
+                        <textarea class="form-control" id="nouveau_magasin_adresse" name="adresse" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_magasin_telephone" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="nouveau_magasin_telephone" name="telephone">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_magasin_responsable" class="form-label">Responsable</label>
+                                <input type="text" class="form-control" id="nouveau_magasin_responsable" name="responsable">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-success" id="btnSauvegarderMagasin">
+                    <i class="fas fa-save me-2"></i>
+                    Créer le magasin
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour créer un nouveau client -->
+<div class="modal fade" id="modalNouveauClient" tabindex="-1" aria-labelledby="modalNouveauClientLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNouveauClientLabel">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Nouveau Client
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNouveauClient">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_client_nom" class="form-label">Nom *</label>
+                                <input type="text" class="form-control" id="nouveau_client_nom" name="nom" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_client_prenom" class="form-label">Prénom</label>
+                                <input type="text" class="form-control" id="nouveau_client_prenom" name="prenom">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_client_telephone" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="nouveau_client_telephone" name="telephone">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_client_email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="nouveau_client_email" name="email">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nouveau_client_adresse" class="form-label">Adresse</label>
+                        <textarea class="form-control" id="nouveau_client_adresse" name="adresse" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-success" id="btnSauvegarderClient">
+                    <i class="fas fa-save me-2"></i>
+                    Créer le client
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour créer un nouveau produit -->
+<div class="modal fade" id="modalNouveauProduit" tabindex="-1" aria-labelledby="modalNouveauProduitLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNouveauProduitLabel">
+                    <i class="fas fa-box me-2"></i>
+                    Nouveau Produit
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNouveauProduit">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="nouveau_produit_nom" class="form-label">Nom du produit *</label>
+                                <input type="text" class="form-control" id="nouveau_produit_nom" name="nom" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="nouveau_produit_code" class="form-label">Code</label>
+                                <input type="text" class="form-control" id="nouveau_produit_code" name="code">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_produit_prix_achat" class="form-label">Prix d'achat (GNF)</label>
+                                <input type="number" step="0.01" class="form-control" id="nouveau_produit_prix_achat" name="prix_achat">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_produit_prix_vente" class="form-label">Prix de vente *</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control" id="nouveau_produit_prix_vente" name="prix_vente" required>
+                                    <span class="input-group-text">GNF</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_produit_unite" class="form-label">Unité de mesure</label>
+                                <select class="form-select" id="nouveau_produit_unite" name="unite_mesure">
+                                    <option value="pièce">Pièce</option>
+                                    <option value="kg">Kilogramme</option>
+                                    <option value="litre">Litre</option>
+                                    <option value="mètre">Mètre</option>
+                                    <option value="carton">Carton</option>
+                                    <option value="sac">Sac</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_produit_seuil" class="form-label">Seuil d'alerte</label>
+                                <input type="number" step="0.01" class="form-control" id="nouveau_produit_seuil" name="seuil_alerte" value="10">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nouveau_produit_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="nouveau_produit_description" name="description" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-success" id="btnSauvegarderProduit">
+                    <i class="fas fa-save me-2"></i>
+                    Créer le produit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // Définir la date d'aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('id_date');
+    dateInput.value = today;
+    dateInput.setAttribute('max', today);
+    
+    // Calculer le total initial
+    calculerTotal();
+
+    // Navigation multi-étapes
+    let currentStep = 1;
+    const totalSteps = 3;
+    const steps = Array.from(document.querySelectorAll('.form-step'));
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    function showStep(n) {
+        steps.forEach(step => {
+            step.style.display = (parseInt(step.dataset.step) === n) ? '' : 'none';
+        });
+        btnPrev.disabled = (n === 1);
+        if (n === totalSteps) {
+            btnNext.classList.add('d-none');
+            btnSubmit.classList.remove('d-none');
+        } else {
+            btnNext.classList.remove('d-none');
+            btnSubmit.classList.add('d-none');
+        }
+    }
+
+    function validateCurrentStep() {
+        const stepEl = steps.find(s => parseInt(s.dataset.step) === currentStep);
+        if (!stepEl) return true;
+        const requiredFields = stepEl.querySelectorAll('[required]');
+        let valid = true;
+        requiredFields.forEach(field => {
+            if (!field.value || !field.value.toString().trim()) {
+                field.classList.add('is-invalid');
+                valid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Règles supplémentaires par étape
+        if (valid) {
+            if (currentStep === 1) {
+                // Numéro format VTE0001
+                const numEl = document.getElementById('id_numero');
+                const numOk = /^VTE\d{4,}$/.test(numEl.value.trim());
+                if (!numOk) { numEl.classList.add('is-invalid'); valid = false; }
+
+                // Date non future
+                const d = document.getElementById('id_date');
+                if (d.value && d.value > today) { d.classList.add('is-invalid'); valid = false; }
+            }
+            if (currentStep === 3) {
+                const q = parseFloat(document.getElementById('id_quantite_vendue').value);
+                const p = parseFloat(document.getElementById('id_prix_unitaire').value);
+                if (!(q > 0)) { document.getElementById('id_quantite_vendue').classList.add('is-invalid'); valid = false; }
+                if (!(p > 0)) { document.getElementById('id_prix_unitaire').classList.add('is-invalid'); valid = false; }
+            }
+        }
+        return valid;
+    }
+
+    btnNext.addEventListener('click', function() {
+        if (!validateCurrentStep()) return;
+        if (currentStep < totalSteps) {
+            currentStep++;
+            showStep(currentStep);
+        }
+    });
+
+    btnPrev.addEventListener('click', function() {
+        if (currentStep > 1) {
+            currentStep--;
+            showStep(currentStep);
+        }
+    });
+
+    // Afficher la première étape au chargement
+    showStep(currentStep);
+});
+
+// Calculer le total automatiquement
+function calculerTotal() {
+    const quantite = parseFloat(document.getElementById('id_quantite_vendue').value) || 0;
+    const prix = parseFloat(document.getElementById('id_prix_unitaire').value) || 0;
+    const total = quantite * prix;
+    
+    // Mettre à jour l'affichage immédiatement
+    document.getElementById('recap-quantite').textContent = quantite.toLocaleString();
+    document.getElementById('recap-prix').textContent = prix.toLocaleString() + ' GNF';
+    document.getElementById('recap-total').textContent = total.toLocaleString() + ' GNF';
+}
+
+// Remplir automatiquement le prix unitaire quand un produit existant est sélectionné
+document.getElementById('id_produit').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const prix = selectedOption.getAttribute('data-prix');
+    
+    if (prix && prix !== '0') {
+        document.getElementById('id_prix_unitaire').value = prix;
+        calculerTotal(); // Recalculer le total
+    }
+});
+
+// Événements pour le calcul automatique du total en temps réel
+document.getElementById('id_quantite_vendue').addEventListener('input', calculerTotal);
+document.getElementById('id_quantite_vendue').addEventListener('keyup', calculerTotal);
+document.getElementById('id_quantite_vendue').addEventListener('change', calculerTotal);
+
+document.getElementById('id_prix_unitaire').addEventListener('input', calculerTotal);
+document.getElementById('id_prix_unitaire').addEventListener('keyup', calculerTotal);
+document.getElementById('id_prix_unitaire').addEventListener('change', calculerTotal);
+
+// Gestion du bouton "Nouveau Magasin"
+document.getElementById('btnNouveauMagasin').addEventListener('click', function() {
+    // Réinitialiser le formulaire de création de magasin
+    document.getElementById('formNouveauMagasin').reset();
+    
+    // Afficher la modal
+    const modal = new bootstrap.Modal(document.getElementById('modalNouveauMagasin'));
+    modal.show();
+});
+
+// Gestion de la sauvegarde du nouveau magasin
+document.getElementById('btnSauvegarderMagasin').addEventListener('click', function() {
+    const nom = document.getElementById('nouveau_magasin_nom').value.trim();
+    
+    if (!nom) {
+        alert('Le nom du magasin est obligatoire.');
+        document.getElementById('nouveau_magasin_nom').focus();
+        return;
+    }
+    
+    // Simuler la création du magasin (en réalité, cela devrait être une requête AJAX)
+    // Pour cette démo, on ajoute directement l'option au select
+    const selectMagasin = document.getElementById('id_magasin');
+    const nouvelleOption = document.createElement('option');
+    
+    // Générer un ID temporaire (en production, cela viendrait du serveur)
+    const nouvelId = 'new_' + Date.now();
+    nouvelleOption.value = nouvelId;
+    nouvelleOption.textContent = nom;
+    nouvelleOption.selected = true;
+    
+    // Ajouter l'option au select
+    selectMagasin.appendChild(nouvelleOption);
+    
+    // Fermer la modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalNouveauMagasin'));
+    modal.hide();
+    
+    // Afficher un message de confirmation
+    showSuccessMessage(`Magasin "${nom}" créé avec succès et sélectionné.`);
+});
+
+// Gestion du bouton "Nouveau Client"
+document.getElementById('btnNouveauClient').addEventListener('click', function() {
+    document.getElementById('formNouveauClient').reset();
+    const modal = new bootstrap.Modal(document.getElementById('modalNouveauClient'));
+    modal.show();
+});
+
+// Gestion de la sauvegarde du nouveau client
+document.getElementById('btnSauvegarderClient').addEventListener('click', function() {
+    const nom = document.getElementById('nouveau_client_nom').value.trim();
+    const prenom = document.getElementById('nouveau_client_prenom').value.trim();
+    
+    if (!nom) {
+        alert('Le nom du client est obligatoire.');
+        document.getElementById('nouveau_client_nom').focus();
+        return;
+    }
+    
+    const selectClient = document.getElementById('id_client');
+    const nouvelleOption = document.createElement('option');
+    
+    const nouvelId = 'new_client_' + Date.now();
+    const nomComplet = prenom ? `${nom} ${prenom}` : nom;
+    nouvelleOption.value = nouvelId;
+    nouvelleOption.textContent = nomComplet;
+    nouvelleOption.selected = true;
+    
+    selectClient.appendChild(nouvelleOption);
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalNouveauClient'));
+    modal.hide();
+    
+    showSuccessMessage(`Client "${nomComplet}" créé avec succès et sélectionné.`);
+});
+
+// Gestion du bouton "Nouveau Produit"
+document.getElementById('btnNouveauProduit').addEventListener('click', function() {
+    document.getElementById('formNouveauProduit').reset();
+    const modal = new bootstrap.Modal(document.getElementById('modalNouveauProduit'));
+    modal.show();
+});
+
+// Gestion de la sauvegarde du nouveau produit
+document.getElementById('btnSauvegarderProduit').addEventListener('click', function() {
+    const nom = document.getElementById('nouveau_produit_nom').value.trim();
+    const code = document.getElementById('nouveau_produit_code').value.trim();
+    const prixVente = document.getElementById('nouveau_produit_prix_vente').value;
+    
+    if (!nom) {
+        alert('Le nom du produit est obligatoire.');
+        document.getElementById('nouveau_produit_nom').focus();
+        return;
+    }
+    
+    const selectProduit = document.getElementById('id_produit');
+    const nouvelleOption = document.createElement('option');
+    
+    const nouvelId = 'new_product_' + Date.now();
+    const nomProduit = code ? `${nom} (${code})` : nom;
+    nouvelleOption.value = nouvelId;
+    nouvelleOption.textContent = nomProduit;
+    nouvelleOption.selected = true;
+    
+    // Si un prix de vente est défini, l'utiliser comme prix unitaire par défaut
+    if (prixVente) {
+        nouvelleOption.setAttribute('data-prix', prixVente);
+    }
+    
+    selectProduit.appendChild(nouvelleOption);
+    
+    // Remplir automatiquement le prix unitaire si disponible
+    if (prixVente) {
+        document.getElementById('id_prix_unitaire').value = prixVente;
+        calculerTotal(); // Recalculer le total
+    }
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalNouveauProduit'));
+    modal.hide();
+    
+    showSuccessMessage(`Produit "${nomProduit}" créé avec succès et sélectionné.`);
+});
+
+// Fonction pour afficher un message de succès
+function showSuccessMessage(message) {
+    // Créer un élément d'alerte temporaire
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Supprimer automatiquement après 5 secondes
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+
+// Validation du formulaire avant soumission
+document.getElementById('venteForm').addEventListener('submit', function(e) {
+    const requiredFields = document.querySelectorAll('[required]');
+    let allValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            allValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!allValid) {
+        e.preventDefault();
+        alert('Veuillez remplir tous les champs obligatoires.');
+    }
+});
+</script>
+{% endblock %}
