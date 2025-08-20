@@ -57,12 +57,14 @@ Un système complet de gestion des ventes développé avec Django, comprenant 8 
 ### Prérequis
 - Python 3.8+
 - pip
+ - Git
 
 ### Étapes d'installation
 
-1. **Cloner le projet** (si applicable) ou naviguer vers le dossier :
+1. **Cloner le projet**
 ```bash
-cd "C:\Users\JEAN FAYA\Desktop\gestionstock"
+git clone https://github.com/millimonojeanfaya1-commits/etsyalidistribution.git
+cd etsyalidistribution
 ```
 
 2. **Créer un environnement virtuel** :
@@ -144,7 +146,7 @@ gestionstock/
 ```
 
 ### Technologies utilisées
-- **Backend** : Django 4.2.7
+- **Backend** : Django 4.2.x
 - **Frontend** : Bootstrap 5.3, Font Awesome
 - **Base de données** : SQLite (développement)
 - **Formulaires** : Django Crispy Forms
@@ -164,10 +166,14 @@ Le système génère automatiquement :
 ### Base de données
 Par défaut, le système utilise SQLite. Pour la production, modifiez `settings.py` pour utiliser PostgreSQL ou MySQL.
 
-### Paramètres régionaux
+### Paramètres régionaux (exemple)
 - Langue : Français (fr-fr)
 - Fuseau horaire : Africa/Kinshasa
 - Devise : FCFA
+
+### Authentification GitHub (si vous contribuez)
+- Utilisez une clé SSH ou un Personal Access Token (PAT) pour pousser sur GitHub.
+- Ajouter le remote (déjà configuré) : `git remote -v`.
 
 ## 🚀 Déploiement
 
@@ -176,6 +182,19 @@ Pour déployer en production :
 2. Modifiez `DEBUG = False` dans settings.py
 3. Configurez les fichiers statiques
 4. Utilisez un serveur web (Nginx + Gunicorn)
+
+## ⚡ Démarrage rapide
+
+```bash
+git clone https://github.com/millimonojeanfaya1-commits/etsyalidistribution.git
+cd etsyalidistribution
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
 
 ## 📞 Support
 
