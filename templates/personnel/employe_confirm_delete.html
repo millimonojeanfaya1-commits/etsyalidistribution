@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card border-warning">
+  <div class="card-header bg-warning text-dark">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    Confirmer la Désactivation
+  </div>
+  <div class="card-body">
+    <p>Voulez-vous vraiment <strong>désactiver</strong> l'employé suivant ?</p>
+    <ul>
+      <li><strong>Nom:</strong> {{ employe.nom }} {{ employe.prenoms }}</li>
+      <li><strong>Matricule:</strong> {{ employe.matricule }}</li>
+      <li><strong>N° employé:</strong> {{ employe.numero }}</li>
+      <li><strong>Fonction:</strong> {{ employe.fonction }}</li>
+    </ul>
+    <p class="text-muted mb-4">Cette action n'efface pas les données. Le statut passera à <em>Inactif</em>.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <a href="{% url 'personnel:employe_detail' employe.pk %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Annuler
+      </a>
+      <button type="submit" class="btn btn-warning">
+        <i class="fas fa-user-slash me-1"></i> Confirmer la désactivation
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

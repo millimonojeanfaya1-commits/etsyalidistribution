@@ -21,7 +21,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Total Ventes</h6>
-                        <h4>{{ total_ventes|fcfa0 }} GNF</h4>
+                        <h4>{{ total_ventes|gnf }} GNF</h4>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-shopping-cart fa-2x"></i>
@@ -36,7 +36,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Ventes Cash</h6>
-                        <h4>{{ ventes_cash|fcfa0 }} GNF</h4>
+                        <h4>{{ ventes_cash|gnf }} GNF</h4>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-money-bill fa-2x"></i>
@@ -51,7 +51,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Ventes Crédit</h6>
-                        <h4>{{ ventes_credit|fcfa0 }} GNF</h4>
+                        <h4>{{ ventes_credit|gnf }} GNF</h4>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-credit-card fa-2x"></i>
@@ -101,6 +101,13 @@
                     </button>
                 </div>
             </div>
+            <div class="col-md-12 text-end">
+                <a href="{% url 'ventes:vente_export' %}?{% if filters.magasin %}magasin={{ filters.magasin|urlencode }}&{% endif %}{% if filters.type_vente %}type_vente={{ filters.type_vente|urlencode }}&{% endif %}{% if filters.date_debut %}date_debut={{ filters.date_debut|urlencode }}&{% endif %}{% if filters.date_fin %}date_fin={{ filters.date_fin|urlencode }}{% endif %}"
+                   class="btn btn-success">
+                    <i class="fas fa-file-excel me-2"></i>
+                    Exporter Excel
+                </a>
+            </div>
         </form>
     </div>
 </div>
@@ -140,7 +147,7 @@
                                     <span class="badge bg-warning">Crédit</span>
                                 {% endif %}
                             </td>
-                            <td><strong>{{ vente.total_vente|fcfa0 }} FCFA</strong></td>
+                            <td><strong>{{ vente.total_vente|gnf }} GNF</strong></td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button class="btn btn-outline-primary" title="Voir détails">
@@ -166,12 +173,12 @@
                     <ul class="pagination justify-content-center mt-4">
                         {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page=1">
+                                <a class="page-link" href="?page=1{% if filters.magasin %}&magasin={{ filters.magasin|urlencode }}{% endif %}{% if filters.type_vente %}&type_vente={{ filters.type_vente|urlencode }}{% endif %}{% if filters.date_debut %}&date_debut={{ filters.date_debut|urlencode }}{% endif %}{% if filters.date_fin %}&date_fin={{ filters.date_fin|urlencode }}{% endif %}">
                                     <i class="fas fa-angle-double-left"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filters.magasin %}&magasin={{ filters.magasin|urlencode }}{% endif %}{% if filters.type_vente %}&type_vente={{ filters.type_vente|urlencode }}{% endif %}{% if filters.date_debut %}&date_debut={{ filters.date_debut|urlencode }}{% endif %}{% if filters.date_fin %}&date_fin={{ filters.date_fin|urlencode }}{% endif %}">
                                     <i class="fas fa-angle-left"></i>
                                 </a>
                             </li>
@@ -185,12 +192,12 @@
 
                         {% if page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filters.magasin %}&magasin={{ filters.magasin|urlencode }}{% endif %}{% if filters.type_vente %}&type_vente={{ filters.type_vente|urlencode }}{% endif %}{% if filters.date_debut %}&date_debut={{ filters.date_debut|urlencode }}{% endif %}{% if filters.date_fin %}&date_fin={{ filters.date_fin|urlencode }}{% endif %}">
                                     <i class="fas fa-angle-right"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if filters.magasin %}&magasin={{ filters.magasin|urlencode }}{% endif %}{% if filters.type_vente %}&type_vente={{ filters.type_vente|urlencode }}{% endif %}{% if filters.date_debut %}&date_debut={{ filters.date_debut|urlencode }}{% endif %}{% if filters.date_fin %}&date_fin={{ filters.date_fin|urlencode }}{% endif %}">
                                     <i class="fas fa-angle-double-right"></i>
                                 </a>
                             </li>

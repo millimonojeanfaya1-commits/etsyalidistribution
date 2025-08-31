@@ -1,9 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
 from .models import CreditClient, Paiement
+from fournisseurs.models import Produit
+from stocks.models import StockActuel
 
 
 @login_required
@@ -47,6 +50,52 @@ def credit_list(request):
     }
     return render(request, 'credits/credit_list.html', context)
 
+
+@login_required
+def credit_export_excel(request):
+    """Exporter la liste des crédits clients (avec filtres) en Excel"""
+    credits = CreditClient.objects.select_related('client', 'magasin', 'produit').all()
+
+    # Filtres
+    statut = request.GET.get('statut')
+    if statut == 'solde':
+        credits = credits.filter(solde_restant__lte=0)
+    elif statut == 'impaye':
+        credits = credits.filter(solde_restant__gt=0)
+
+    client_id = request.GET.get('client')
+    if client_id:
+        credits = credits.filter(client_id=client_id)
+
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Crédits'
+    ws.append([
+        'N° Crédit', 'Date', 'Client', 'Magasin', 'Produit', 'Quantité', 'Prix unitaire',
+        'Montant total', 'Montant payé', 'Solde restant', 'Observations'
+    ])
+
+    for c in credits.order_by('-date'):
+        ws.append([
+            c.numero,
+            c.date.strftime('%d/%m/%Y') if c.date else '',
+            str(c.client) if c.client else '',
+            c.magasin.nom if c.magasin else '',
+            c.produit.nom if c.produit else '',
+            int(c.quantite) if c.quantite is not None else 0,
+            int(c.prix_unitaire) if c.prix_unitaire is not None else 0,
+            int(c.montant_total) if c.montant_total is not None else 0,
+            int(c.montant_paye) if c.montant_paye is not None else 0,
+            int(c.solde_restant) if c.solde_restant is not None else 0,
+            c.observations or '',
+        ])
+
+    from django.http import HttpResponse
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="credits.xlsx"'
+    wb.save(response)
+    return response
 
 @login_required
 def credit_create(request):
@@ -146,3 +195,11 @@ def statistiques_credits(request):
         'clients_debiteurs': clients_debiteurs,
     }
     return render(request, 'credits/statistiques.html', context)
+
+
+@login_required
+def produits_par_magasin(request, magasin_id):
+    """Retourne la liste des produits disponibles pour un magasin (JSON)"""
+    produit_ids = StockActuel.objects.filter(magasin_id=magasin_id).values_list('produit_id', flat=True)
+    produits = Produit.objects.filter(id__in=produit_ids).order_by('nom').values('id', 'nom', 'prix_vente_conseille')
+    return JsonResponse({'produits': list(produits)})

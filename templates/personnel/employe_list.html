@@ -28,6 +28,31 @@
                         <h6 class="card-title">Total Employés</h6>
                         <h4><span class="format-number">{{ total_employes|default:0 }}</span></h4>
                     </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Pagination" class="mt-3">
+              <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?q={{ q }}&status={{ status }}&page={{ page_obj.previous_page_number }}">Précédent</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">Précédent</span></li>
+                {% endif %}
+
+                <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?q={{ q }}&status={{ status }}&page={{ page_obj.next_page_number }}">Suivant</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">Suivant</span></li>
+                {% endif %}
+              </ul>
+            </nav>
+            {% endif %}
                     <div class="align-self-center">
                         <i class="fas fa-users fa-2x"></i>
                     </div>
@@ -84,13 +109,29 @@
 
 <!-- Liste des employés -->
 <div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="fas fa-list me-2"></i>
-            Liste des Employés
-        </h5>
-    </div>
-    <div class="card-body">
+  <div class="card-header">
+    <h5 class="mb-0">
+      <i class="fas fa-list me-2"></i>
+      Liste des Employés
+    </h5>
+  </div>
+  <div class="card-body">
+    <!-- Recherche / Filtres -->
+    <form method="get" class="row g-2 mb-3">
+      <div class="col-md-6">
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Rechercher (nom, prénoms, matricule, N° employé, fonction)">
+      </div>
+      <div class="col-md-3">
+        <select name="status" class="form-select">
+          <option value="actifs" {% if status == 'actifs' %}selected{% endif %}>Actifs</option>
+          <option value="inactifs" {% if status == 'inactifs' %}selected{% endif %}>Inactifs</option>
+          <option value="all" {% if status == 'all' %}selected{% endif %}>Tous</option>
+        </select>
+      </div>
+      <div class="col-md-3 d-grid">
+        <button type="submit" class="btn btn-outline-secondary"><i class="fas fa-search me-1"></i> Filtrer</button>
+      </div>
+    </form>
         {% if employes %}
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -99,7 +140,7 @@
                             <th>Matricule</th>
                             <th>Nom & Prénom</th>
                             <th>Poste</th>
-                            <th>Département</th>
+                            <!-- Département non défini dans le modèle -->
                             <th>Salaire Base</th>
                             <th>Date d'Embauche</th>
                             <th>Statut</th>
@@ -113,38 +154,40 @@
                                 <strong>{{ employe.matricule }}</strong>
                             </td>
                             <td>
-                                <strong>{{ employe.nom }} {{ employe.prenom }}</strong>
+                                <strong>{{ employe.nom }} {{ employe.prenoms }}</strong>
                                 {% if employe.email %}
                                     <br><small class="text-muted">{{ employe.email }}</small>
                                 {% endif %}
                             </td>
-                            <td>{{ employe.poste }}</td>
-                            <td>
-                                <span class="badge bg-info">{{ employe.departement }}</span>
-                            </td>
+                            <td>{{ employe.fonction }}</td>
                             <td>
                                 <strong class="text-success format-number">{{ employe.salaire_base|floatformat:0 }}</strong> GNF
                             </td>
                             <td>{{ employe.date_embauche|date:"d/m/Y" }}</td>
                             <td>
-                                {% if employe.statut == 'actif' %}
+                                {% if employe.actif %}
                                     <span class="badge bg-success">Actif</span>
-                                {% elif employe.statut == 'inactif' %}
-                                    <span class="badge bg-danger">Inactif</span>
-                                {% elif employe.statut == 'conge' %}
-                                    <span class="badge bg-warning">En congé</span>
                                 {% else %}
-                                    <span class="badge bg-secondary">{{ employe.statut|title }}</span>
+                                    <span class="badge bg-danger">Inactif</span>
                                 {% endif %}
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <a href="#" class="btn btn-outline-info" title="Détails">
+                                    <a href="{% url 'personnel:employe_detail' employe.pk %}" class="btn btn-outline-info" title="Détails">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="#" class="btn btn-outline-primary" title="Modifier">
+                                    <a href="{% url 'personnel:employe_update' employe.pk %}" class="btn btn-outline-primary" title="Modifier">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    {% if employe.actif %}
+                                        <a href="{% url 'personnel:employe_delete' employe.pk %}" class="btn btn-outline-warning" title="Désactiver">
+                                            <i class="fas fa-user-slash"></i>
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'personnel:employe_activate' employe.pk %}" class="btn btn-outline-success" title="Activer">
+                                            <i class="fas fa-user-check"></i>
+                                        </a>
+                                    {% endif %}
                                     <a href="#" class="btn btn-outline-success" title="Nouveau salaire">
                                         <i class="fas fa-money-bill-wave"></i>
                                     </a>

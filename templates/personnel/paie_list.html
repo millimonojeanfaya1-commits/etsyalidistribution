@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">{{ title|default:'Gestion des Paies' }}</h1>
+    <a class="btn btn-primary" href="{% url 'personnel:paie_create' %}">Nouvelle paie</a>
+  </div>
+
+  {% if paies %}
+  <div class="table-responsive shadow-sm">
+    <table class="table table-striped align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Employé</th>
+          <th>Période</th>
+          <th>Brut</th>
+          <th>Net</th>
+          <th>Payé</th>
+          <th>Date paiement</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in paies %}
+        <tr>
+          <td>{{ p.employe.nom }} {{ p.employe.prenoms }}</td>
+          <td>{{ p.get_mois_display }} {{ p.annee }}</td>
+          <td>{{ p.salaire_brut }}</td>
+          <td>{{ p.salaire_net }}</td>
+          <td>
+            {% if p.paye %}
+              <span class="badge text-bg-success">Oui</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Non</span>
+            {% endif %}
+          </td>
+          <td>{{ p.date_paiement|default:'—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="alert alert-info">Aucune paie enregistrée pour le moment.</div>
+  {% endif %}
+</div>
+{% endblock %}

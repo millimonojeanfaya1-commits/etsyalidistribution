@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from .models import Fournisseur, Produit, Livraison
 from .forms import FournisseurForm, ProduitForm, LivraisonForm
 
@@ -177,6 +178,54 @@ def livraison_list(request):
 
 
 @login_required
+def livraison_export_excel(request):
+    """Exporter la liste des livraisons en Excel (en respectant les filtres)"""
+    livraisons = Livraison.objects.select_related('fournisseur', 'produit').all()
+
+    # Filtres
+    fournisseur_id = request.GET.get('fournisseur')
+    if fournisseur_id:
+        livraisons = livraisons.filter(fournisseur_id=fournisseur_id)
+
+    date_debut = request.GET.get('date_debut')
+    date_fin = request.GET.get('date_fin')
+    if date_debut:
+        livraisons = livraisons.filter(date__gte=date_debut)
+    if date_fin:
+        livraisons = livraisons.filter(date__lte=date_fin)
+
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Livraisons'
+    ws.append([
+        'N° Enregistrement', 'Date', 'Fournisseur', 'Produit',
+        'Quantité livrée', "Unité", "Prix d'achat unitaire", 'Montant total achat',
+        'Observations'
+    ])
+
+    for l in livraisons.order_by('-date'):
+        prix_unit = float(l.prix_achat_unitaire) if l.prix_achat_unitaire is not None else 0
+        montant_total = float(l.montant_total_achat) if l.montant_total_achat is not None else 0
+        ws.append([
+            l.numero_enregistrement,
+            l.date.strftime('%d/%m/%Y') if l.date else '',
+            l.fournisseur.nom if l.fournisseur else '',
+            l.produit.nom if l.produit else '',
+            float(l.quantite_livree) if l.quantite_livree is not None else 0,
+            getattr(l.produit, 'unite_mesure', '') or '',
+            int(round(prix_unit)),
+            int(round(montant_total)),
+            l.observations or '',
+        ])
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="livraisons.xlsx"'
+    wb.save(response)
+    return response
+
+
+@login_required
 def livraison_create(request):
     """
     Enregistrer une nouvelle livraison
@@ -276,3 +325,64 @@ def statistiques_fournisseurs(request):
         'stats_mensuelles': stats_mensuelles,
     }
     return render(request, 'fournisseurs/statistiques.html', context)
+
+
+@login_required
+def fournisseur_export_excel(request):
+    """Exporter la liste des fournisseurs (avec recherche) en Excel"""
+    qs = Fournisseur.objects.all().order_by('nom')
+    search = request.GET.get('search')
+    if search:
+        qs = qs.filter(
+            Q(nom__icontains=search) |
+            Q(telephone__icontains=search) |
+            Q(email__icontains=search)
+        )
+
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Fournisseurs'
+    ws.append(['Nom', 'Téléphone', 'Email', 'Adresse', "Date d'enregistrement"]) 
+    for f in qs:
+        ws.append([
+            f.nom,
+            f.telephone or '',
+            f.email or '',
+            f.adresse or '',
+            f.date_creation.strftime('%d/%m/%Y') if f.date_creation else '',
+        ])
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="fournisseurs.xlsx"'
+    wb.save(response)
+    return response
+
+
+@login_required
+def produit_export_excel(request):
+    """Exporter la liste des produits en Excel (avec recherche basique)"""
+    produits = Produit.objects.all().order_by('nom')
+    search = request.GET.get('search', '').strip()
+    if search:
+        produits = produits.filter(Q(nom__icontains=search) | Q(unite_mesure__icontains=search))
+
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Produits'
+    ws.append(['Nom', 'Unité', 'Prix conseillé', 'Description', "Date d'enregistrement"]) 
+    for p in produits:
+        prix_conseille = float(p.prix_vente_conseille) if p.prix_vente_conseille is not None else 0
+        ws.append([
+            p.nom,
+            p.unite_mesure,
+            int(round(prix_conseille)),
+            p.description or '',
+            p.date_creation.strftime('%d/%m/%Y') if p.date_creation else '',
+        ])
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="produits.xlsx"'
+    wb.save(response)
+    return response

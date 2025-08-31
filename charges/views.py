@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
+from django.utils import timezone
 from django.core.paginator import Paginator
 from .models import CategorieCharge, Charge, BudgetAnnuel
 
@@ -10,10 +11,21 @@ from .models import CategorieCharge, Charge, BudgetAnnuel
 def charge_list(request):
     """Liste des charges"""
     charges = Charge.objects.select_related('categorie').all()
+
+    # Statistiques rapides pour l'en-tête
+    now = timezone.now()
+    total_charges = charges.aggregate(total=Sum('montant'))['total'] or 0
+    charges_mois = charges.filter(date__year=now.year, date__month=now.month).aggregate(total=Sum('montant'))['total'] or 0
+    charges_fixes = charges.filter(categorie__type_charge='fixe').aggregate(total=Sum('montant'))['total'] or 0
+    charges_variables = charges.filter(categorie__type_charge='variable').aggregate(total=Sum('montant'))['total'] or 0
     
     context = {
         'title': 'Gestion des Charges',
         'charges': charges,
+        'total_charges': total_charges,
+        'charges_mois': charges_mois,
+        'charges_fixes': charges_fixes,
+        'charges_variables': charges_variables,
     }
     return render(request, 'charges/charge_list.html', context)
 
@@ -21,8 +33,22 @@ def charge_list(request):
 @login_required
 def charge_create(request):
     """Créer une nouvelle charge"""
+    from .forms import ChargeForm
+
+    if request.method == 'POST':
+        form = ChargeForm(request.POST)
+        if form.is_valid():
+            charge = form.save()
+            messages.success(request, f"Charge {charge.numero} créée avec succès.")
+            return redirect('charges:charge_list')
+        else:
+            messages.error(request, "Veuillez corriger les erreurs du formulaire.")
+    else:
+        form = ChargeForm()
+
     context = {
         'title': 'Nouvelle Charge',
+        'form': form,
     }
     return render(request, 'charges/charge_form.html', context)
 

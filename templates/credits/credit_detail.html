@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>
+    <i class="fas fa-file-invoice-dollar me-2"></i>
+    Détail du Crédit {{ credit.numero }}
+  </h3>
+  <div class="d-flex gap-2">
+    <a href="{% url 'credits:credit_list' %}" class="btn btn-secondary">
+      <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+    </a>
+    <a href="{% url 'credits:paiement_create' credit.pk %}" class="btn btn-success">
+      <i class="fas fa-money-bill-wave me-1"></i> Nouveau paiement
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Informations</div>
+      <div class="card-body">
+        <p><strong>Client:</strong> {{ credit.client }}</p>
+        <p><strong>Magasin:</strong> {{ credit.magasin }}</p>
+        <p><strong>Produit:</strong> {{ credit.produit }}</p>
+        <p><strong>Date:</strong> {{ credit.date|date:'d/m/Y' }}</p>
+        <p><strong>Quantité:</strong> {{ credit.quantite|floatformat:0 }}</p>
+        <p><strong>Prix unitaire:</strong> {{ credit.prix_unitaire|floatformat:0 }} GNF</p>
+        <p><strong>Montant total:</strong> {{ credit.montant_total|floatformat:0 }} GNF</p>
+        <p><strong>Montant payé:</strong> {{ credit.montant_paye|floatformat:0 }} GNF</p>
+        <p><strong>Solde restant:</strong> {{ credit.solde_restant|floatformat:0 }} GNF</p>
+        {% if credit.observations %}
+        <p><strong>Observations:</strong><br>{{ credit.observations }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Paiements</div>
+      <div class="card-body">
+        {% if paiements %}
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Montant</th>
+                  <th>Mode</th>
+                  <th>Référence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in paiements %}
+                <tr>
+                  <td>{{ p.date_paiement|date:'d/m/Y' }}</td>
+                  <td>{{ p.montant|floatformat:0 }} GNF</td>
+                  <td>{{ p.mode_paiement }}</td>
+                  <td>{{ p.reference }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted">Aucun paiement encore enregistré.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

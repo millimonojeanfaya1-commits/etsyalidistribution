@@ -11,6 +11,7 @@ urlpatterns = [
     # Stock actuel
     path('actuel/', views.stock_actuel_list, name='stock_actuel_list'),
     path('alertes/', views.alertes_stock, name='alertes_stock'),
+    path('actuel/export/', views.stock_actuel_export_excel, name='stock_actuel_export'),
     
     # Inventaires
     path('inventaires/', views.inventaire_list, name='inventaire_list'),

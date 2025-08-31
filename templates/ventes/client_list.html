@@ -39,6 +39,13 @@
                     Rechercher
                 </button>
             </div>
+            <div class="col-md-3">
+                <a href="{% url 'ventes:client_export' %}?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.type_client %}type_client={{ request.GET.type_client|urlencode }}{% endif %}"
+                   class="btn btn-success w-100">
+                    <i class="fas fa-file-excel me-2"></i>
+                    Exporter Excel
+                </a>
+            </div>
         </form>
     </div>
 </div>
@@ -78,14 +85,14 @@
                                     <span class="badge bg-primary">Entreprise</span>
                                 {% endif %}
                             </td>
-                            <td>{{ client.limite_credit|fcfa0 }} FCFA</td>
+                            <td>{{ client.limite_credit|gnf }} GNF</td>
                             <td>
                                 {% if client.credit_actuel > 0 %}
                                     <span class="text-warning">
-                                        {{ client.credit_actuel|fcfa0 }} FCFA
+                                        {{ client.credit_actuel|gnf }} GNF
                                     </span>
                                 {% else %}
-                                    <span class="text-success">0 FCFA</span>
+                                    <span class="text-success">0 GNF</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -116,12 +123,12 @@
                     <ul class="pagination justify-content-center mt-4">
                         {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page=1">
+                                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}{% if request.GET.type_client %}&type_client={{ request.GET.type_client|urlencode }}{% endif %}">
                                     <i class="fas fa-angle-double-left"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}{% if request.GET.type_client %}&type_client={{ request.GET.type_client|urlencode }}{% endif %}">
                                     <i class="fas fa-angle-left"></i>
                                 </a>
                             </li>
@@ -135,12 +142,12 @@
 
                         {% if page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}{% if request.GET.type_client %}&type_client={{ request.GET.type_client|urlencode }}{% endif %}">
                                     <i class="fas fa-angle-right"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}{% if request.GET.type_client %}&type_client={{ request.GET.type_client|urlencode }}{% endif %}">
                                     <i class="fas fa-angle-double-right"></i>
                                 </a>
                             </li>

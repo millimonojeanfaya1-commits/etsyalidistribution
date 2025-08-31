@@ -3,11 +3,11 @@ from django import template
 
 register = template.Library()
 
-@register.filter(name='fcfa0')
-def fcfa0(value):
+@register.filter(name='gnf')
+def gnf(value):
     """
-    Format a numeric value with thousand separators and zero decimals for FCFA.
-    Usage: {{ amount|fcfa0 }} FCFA
+    Format a numeric value with thousand separators and zero decimals for GNF.
+    Usage: {{ amount|gnf }} GNF
     """
     if value is None:
         return '0'

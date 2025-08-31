@@ -99,6 +99,16 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+## 🖼️ Captures d'écran (placeholders)
+
+Ajoutez vos captures d'écran dans un dossier `docs/screenshots/` et référencez-les ici.
+
+Exemples:
+
+![Dashboard](docs/screenshots/dashboard.png)
+![Liste des ventes](docs/screenshots/ventes_list.png)
+![Stocks](docs/screenshots/stocks.png)
+
 8. **Accéder à l'application** :
    - Interface principale : http://127.0.0.1:8000/
    - Interface d'administration : http://127.0.0.1:8000/admin/
@@ -169,7 +179,7 @@ Par défaut, le système utilise SQLite. Pour la production, modifiez `settings.
 ### Paramètres régionaux (exemple)
 - Langue : Français (fr-fr)
 - Fuseau horaire : Africa/Kinshasa
-- Devise : FCFA
+- Devise : GNF
 
 ### Authentification GitHub (si vous contribuez)
 - Utilisez une clé SSH ou un Personal Access Token (PAT) pour pousser sur GitHub.

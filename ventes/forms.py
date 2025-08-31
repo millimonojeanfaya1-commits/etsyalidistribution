@@ -31,6 +31,14 @@ class MagasinForm(forms.ModelForm):
             Submit('submit', 'Enregistrer', css_class='btn btn-primary')
         )
 
+    def clean_nom(self):
+        nom = self.cleaned_data.get('nom')
+        return nom.upper().strip() if nom else nom
+
+    def clean_responsable(self):
+        resp = self.cleaned_data.get('responsable')
+        return resp.upper().strip() if resp else resp
+
 
 class ClientForm(forms.ModelForm):
     """
@@ -61,6 +69,14 @@ class ClientForm(forms.ModelForm):
             ),
             Submit('submit', 'Enregistrer', css_class='btn btn-primary')
         )
+
+    def clean_nom(self):
+        nom = self.cleaned_data.get('nom')
+        return nom.upper().strip() if nom else nom
+
+    def clean_prenom(self):
+        prenom = self.cleaned_data.get('prenom')
+        return prenom.upper().strip() if prenom else prenom
 
 
 class VenteForm(forms.ModelForm):
@@ -98,3 +114,7 @@ class VenteForm(forms.ModelForm):
             ),
             Submit('submit', 'Enregistrer la vente', css_class='btn btn-success')
         )
+
+    def clean_numero(self):
+        numero = self.cleaned_data.get('numero')
+        return numero.upper().strip() if numero else numero

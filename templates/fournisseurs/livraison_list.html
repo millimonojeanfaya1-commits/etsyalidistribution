@@ -7,10 +7,16 @@
         <i class="fas fa-truck-loading me-2"></i>
         Historique des Livraisons
     </h2>
-    <a href="{% url 'fournisseurs:livraison_create' %}" class="btn btn-success">
-        <i class="fas fa-plus me-2"></i>
-        Nouvelle Livraison
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'fournisseurs:livraison_export' %}?{% if filters.fournisseur %}fournisseur={{ filters.fournisseur }}&{% endif %}{% if filters.date_debut %}date_debut={{ filters.date_debut }}&{% endif %}{% if filters.date_fin %}date_fin={{ filters.date_fin }}&{% endif %}" class="btn btn-outline-primary">
+            <i class="fas fa-file-excel me-2"></i>
+            Exporter Excel
+        </a>
+        <a href="{% url 'fournisseurs:livraison_create' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>
+            Nouvelle Livraison
+        </a>
+    </div>
 </div>
 
 <!-- Statistiques rapides -->
@@ -21,7 +27,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Total Achats</h6>
-                        <h4>{{ total_achats|fcfa0 }} FCFA</h4>
+                        <h4>{{ total_achats|gnf }} GNF</h4>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-shopping-cart fa-2x"></i>
@@ -123,13 +129,39 @@
                             <td>{{ livraison.fournisseur.nom }}</td>
                             <td>{{ livraison.produit.nom }}</td>
                             <td>{{ livraison.quantite_livree }} {{ livraison.produit.unite_mesure }}</td>
-                            <td>{{ livraison.prix_achat_unitaire|fcfa0 }} FCFA</td>
-                            <td><strong>{{ livraison.montant_total_achat|fcfa0 }} FCFA</strong></td>
+                            <td>{{ livraison.prix_achat_unitaire|gnf }} GNF</td>
+                            <td><strong>{{ livraison.montant_total_achat|gnf }} GNF</strong></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Navigation des pages" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'fournisseurs:livraison_list' %}?page=1{% if filters.fournisseur %}&fournisseur={{ filters.fournisseur }}{% endif %}{% if filters.date_debut %}&date_debut={{ filters.date_debut }}{% endif %}{% if filters.date_fin %}&date_fin={{ filters.date_fin }}{% endif %}">Premier</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'fournisseurs:livraison_list' %}?page={{ page_obj.previous_page_number }}{% if filters.fournisseur %}&fournisseur={{ filters.fournisseur }}{% endif %}{% if filters.date_debut %}&date_debut={{ filters.date_debut }}{% endif %}{% if filters.date_fin %}&date_fin={{ filters.date_fin }}{% endif %}">Précédent</a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'fournisseurs:livraison_list' %}?page={{ page_obj.next_page_number }}{% if filters.fournisseur %}&fournisseur={{ filters.fournisseur }}{% endif %}{% if filters.date_debut %}&date_debut={{ filters.date_debut }}{% endif %}{% if filters.date_fin %}&date_fin={{ filters.date_fin }}{% endif %}">Suivant</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'fournisseurs:livraison_list' %}?page={{ page_obj.paginator.num_pages }}{% if filters.fournisseur %}&fournisseur={{ filters.fournisseur }}{% endif %}{% if filters.date_debut %}&date_debut={{ filters.date_debut }}{% endif %}{% if filters.date_fin %}&date_fin={{ filters.date_fin }}{% endif %}">Dernier</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
         {% else %}
             <div class="text-center py-5">
                 <i class="fas fa-truck-loading fa-3x text-muted mb-3"></i>

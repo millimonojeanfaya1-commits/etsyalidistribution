@@ -7,11 +7,11 @@
         Gestion des Charges
     </h2>
     <div>
-        <a href="#" class="btn btn-success me-2">
+        <a href="{% url 'charges:charge_create' %}" class="btn btn-success me-2">
             <i class="fas fa-plus me-2"></i>
             Nouvelle Charge
         </a>
-        <a href="#" class="btn btn-primary">
+        <a href="{% url 'charges:statistiques' %}" class="btn btn-primary">
             <i class="fas fa-chart-bar me-2"></i>
             Statistiques
         </a>
@@ -110,23 +110,25 @@
                         <tr>
                             <td>{{ charge.date|date:"d/m/Y" }}</td>
                             <td>
-                                <strong>{{ charge.libelle }}</strong>
-                                {% if charge.description %}
-                                    <br><small class="text-muted">{{ charge.description|truncatechars:50 }}</small>
+                                <strong>{{ charge.libelle|upper }}</strong>
+                                {% if charge.facture_numero %}
+                                    <br><small class="text-muted">Facture n° {{ charge.facture_numero }}</small>
+                                {% elif charge.observations %}
+                                    <br><small class="text-muted">{{ charge.observations|truncatechars:50 }}</small>
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="badge bg-warning">Fixe</span>
+                                <span class="badge bg-warning">{{ charge.categorie.get_type_charge_display }}</span>
                             </td>
                             <td>
-                                <span class="badge bg-secondary">Général</span>
+                                <span class="badge bg-secondary">{{ charge.categorie.nom }}</span>
                             </td>
                             <td>
                                 <strong class="format-number">{{ charge.montant|floatformat:0 }}</strong> GNF
                             </td>
                             <td>
                                 {% if charge.fournisseur %}
-                                    {{ charge.fournisseur.nom }}
+                                    {{ charge.fournisseur }}
                                 {% else %}
                                     <span class="text-muted">N/A</span>
                                 {% endif %}

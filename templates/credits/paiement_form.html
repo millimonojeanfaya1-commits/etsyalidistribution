@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h4 class="mb-0">
+          <i class="fas fa-money-bill-wave me-2"></i>
+          {{ title }}
+        </h4>
+        <a href="{% url 'credits:credit_detail' credit.pk %}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left me-1"></i> Retour au crédit
+        </a>
+      </div>
+      <div class="card-body">
+        <form method="post" id="paiementForm" novalidate>
+          {% csrf_token %}
+          {{ form|crispy }}
+          <div class="d-flex justify-content-end mt-3">
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-save me-2"></i> Enregistrer le paiement
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const montant = document.getElementById('id_montant');
+    if (montant) { montant.setAttribute('min', '1'); montant.setAttribute('step', '1'); }
+  });
+</script>
+{% endblock %}

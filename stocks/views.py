@@ -33,9 +33,9 @@ def mouvement_create(request):
     if request.method == 'POST':
         numero = request.POST.get('numero', '').strip()
         date_str = request.POST.get('date')
-        magasin_nom = request.POST.get('magasin', '').strip()
+        magasin_id = request.POST.get('magasin', '').strip()
         commercial_nom = request.POST.get('commercial', '').strip()
-        produit_nom = request.POST.get('produit', '').strip()
+        produit_id = request.POST.get('produit', '').strip()
         stock_initial = request.POST.get('stock_initial', '0').strip()
         stock_vendu = request.POST.get('stock_vendu', '0').strip()
         montant_ventes = request.POST.get('montant_ventes', '0').strip()
@@ -55,9 +55,9 @@ def mouvement_create(request):
         except Exception:
             errors.append("Date invalide.")
 
-        if not magasin_nom:
+        if not magasin_id:
             errors.append("Le magasin est requis.")
-        if not produit_nom:
+        if not produit_id:
             errors.append("Le produit est requis.")
 
         # Numeriques
@@ -79,12 +79,29 @@ def mouvement_create(request):
             for e in errors:
                 messages.error(request, e)
         else:
-            # get_or_create entités
-            magasin, _ = Magasin.objects.get_or_create(nom=magasin_nom)
-            produit, _ = Produit.objects.get_or_create(nom=produit_nom)
+            # Résoudre les entités par ID
+            try:
+                magasin = Magasin.objects.get(id=magasin_id)
+            except Magasin.DoesNotExist:
+                messages.error(request, "Magasin introuvable.")
+                magasin = None
+            try:
+                produit = Produit.objects.get(id=produit_id)
+            except Produit.DoesNotExist:
+                messages.error(request, "Produit introuvable.")
+                produit = None
             commercial = None
             if commercial_nom:
                 commercial, _ = Commercial.objects.get_or_create(nom=commercial_nom)
+
+            # Validation: le produit doit exister dans le magasin (stock actuel)
+            if magasin and produit:
+                if not StockActuel.objects.filter(magasin=magasin, produit=produit).exists():
+                    messages.error(request, "Le produit sélectionné n'est pas disponible dans le magasin choisi.")
+                    return render(request, 'stocks/mouvement_form.html', {
+                        'title': 'Nouveau Mouvement de Stock',
+                        'magasins': Magasin.objects.all(),
+                    })
 
             try:
                 mouvement = MouvementStock.objects.create(
@@ -105,6 +122,7 @@ def mouvement_create(request):
 
     context = {
         'title': 'Nouveau Mouvement de Stock',
+        'magasins': Magasin.objects.all(),
     }
     return render(request, 'stocks/mouvement_form.html', context)
 
@@ -163,3 +181,56 @@ def statistiques_stocks(request):
         'title': 'Statistiques Stocks',
     }
     return render(request, 'stocks/statistiques.html', context)
+
+
+@login_required
+def stock_actuel_export_excel(request):
+    """Exporter la liste du stock actuel en Excel (avec filtres)"""
+    qs = StockActuel.objects.select_related('magasin', 'produit').all()
+
+    # Filtres
+    search = request.GET.get('search', '').strip()
+    if search:
+        qs = qs.filter(produit__nom__icontains=search)
+
+    categorie = request.GET.get('categorie', '').strip()
+    if categorie:
+        # Utilise unite_mesure comme catégorie fonctionnelle
+        qs = qs.filter(produit__unite_mesure=categorie)
+
+    alerte = request.GET.get('alerte', '').strip()
+    if alerte == 'critique':
+        qs = qs.filter(quantite_actuelle__lte=0)
+    elif alerte == 'faible':
+        from django.db.models import F
+        qs = qs.filter(quantite_actuelle__gt=0, quantite_actuelle__lte=F('seuil_alerte'))
+    elif alerte == 'normal':
+        from django.db.models import F
+        qs = qs.filter(quantite_actuelle__gt=F('seuil_alerte'))
+
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Stock Actuel'
+    ws.append([
+        'Magasin', 'Produit', 'Unité', 'Quantité actuelle', 'Seuil alerte',
+        'Prix moyen achat', 'Valeur stock', 'Dernière mise à jour'
+    ])
+
+    for s in qs.order_by('magasin__nom', 'produit__nom'):
+        ws.append([
+            s.magasin.nom if s.magasin else '',
+            s.produit.nom if s.produit else '',
+            getattr(s.produit, 'unite_mesure', '') or '',
+            float(s.quantite_actuelle) if s.quantite_actuelle is not None else 0,
+            float(s.seuil_alerte) if s.seuil_alerte is not None else 0,
+            float(s.prix_moyen_achat) if s.prix_moyen_achat is not None else 0,
+            float(s.valeur_stock) if s.valeur_stock is not None else 0,
+            s.date_maj.strftime('%d/%m/%Y %H:%M') if s.date_maj else '',
+        ])
+
+    from django.http import HttpResponse
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="stock_actuel.xlsx"'
+    wb.save(response)
+    return response

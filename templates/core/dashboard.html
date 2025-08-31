@@ -14,7 +14,7 @@
                             Ventes du jour
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ total_ventes_jour|default:"0"|fcfa0 }} GNF
+                            {{ total_ventes_jour|default:"0"|gnf }} GNF
                         </div>
                     </div>
                     <div class="col-auto">
@@ -24,41 +24,21 @@
             </div>
         </div>
     </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Fournisseurs actifs
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ total_fournisseurs|default:"0" }}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-truck fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-warning shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Alertes stock
+                            Produits actifs
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ stock_alerts|default:"0" }}
+                            {{ total_produits_actifs|default:"0" }}
                         </div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        <i class="fas fa-boxes fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -74,7 +54,7 @@
                             Crédits impayés
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ credits_impayes|default:"0"|fcfa0 }} GNF
+                            {{ credits_impayes|default:"0"|gnf }} GNF
                         </div>
                     </div>
                     <div class="col-auto">
@@ -86,6 +66,29 @@
     </div>
 </div>
 
+<!-- Filtres de période -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="date_debut" class="form-label">Date début</label>
+                <input type="date" id="date_debut" name="date_debut" value="{{ date_debut|date:'Y-m-d' }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label for="date_fin" class="form-label">Date fin</label>
+                <input type="date" id="date_fin" name="date_fin" value="{{ date_fin|date:'Y-m-d' }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Montant ventes (période)</label>
+                <div class="form-control bg-light fw-bold">{{ montant_ventes_periode|gnf }} GNF</div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-2"></i>Appliquer</button>
+            </div>
+        </form>
+    </div>
+    </div>
+
 <!-- Graphiques et tableaux de bord -->
 <div class="row">
     <div class="col-lg-8 mb-4">
@@ -93,7 +96,7 @@
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
                     <i class="fas fa-chart-line me-2"></i>
-                    Évolution des ventes (7 derniers jours)
+                    Ventes par jour (période sélectionnée)
                 </h6>
             </div>
             <div class="card-body">
@@ -130,6 +133,10 @@
                         <i class="fas fa-boxes me-2"></i>
                         Mouvement stock
                     </a>
+                    <a href="{% url 'caisse:create' %}" class="btn btn-secondary">
+                        <i class="fas fa-cash-register me-2"></i>
+                        Mouvement de caisse
+                    </a>
                 </div>
             </div>
         </div>
@@ -161,7 +168,7 @@
                             <tr>
                                 <td>{{ vente.date|date:"d/m/Y" }}</td>
                                 <td>{{ vente.client }}</td>
-                                <td>{{ vente.total_vente|fcfa0 }} FCFA</td>
+                                <td>{{ vente.total_vente|gnf }} GNF</td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -225,30 +232,37 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Graphique des ventes
+// Graphique des ventes (données dynamiques)
 const ctx = document.getElementById('ventesChart').getContext('2d');
+const labels = JSON.parse('{{ ventes_labels_json|escapejs }}');
+const dataPoints = JSON.parse('{{ ventes_data_json|escapejs }}');
 const ventesChart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+        labels: labels,
         datasets: [{
             label: 'Ventes (GNF)',
-            data: [12000, 19000, 15000, 25000, 22000, 30000, 28000],
+            data: dataPoints,
             borderColor: 'rgb(75, 192, 192)',
             backgroundColor: 'rgba(75, 192, 192, 0.1)',
-            tension: 0.1
+            tension: 0.1,
+            fill: true,
         }]
     },
     options: {
         responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true
+        plugins: {
+            legend: { display: true },
+            tooltip: { enabled: true },
+            title: {
+                display: true,
+                text: `Période: {{ date_debut|date:'d/m/Y' }} - {{ date_fin|date:'d/m/Y' }}`
             }
+        },
+        scales: {
+            y: { beginAtZero: true }
         }
     }
 });
-
-// (formatting done server-side via fcfa0)
 </script>
 {% endblock %}

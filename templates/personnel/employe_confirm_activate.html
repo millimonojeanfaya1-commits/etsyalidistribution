@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card border-success">
+  <div class="card-header bg-success text-white">
+    <i class="fas fa-check-circle me-2"></i>
+    Confirmer la Réactivation
+  </div>
+  <div class="card-body">
+    <p>Voulez-vous vraiment <strong>réactiver</strong> l'employé suivant ?</p>
+    <ul>
+      <li><strong>Nom:</strong> {{ employe.nom }} {{ employe.prenoms }}</li>
+      <li><strong>Matricule:</strong> {{ employe.matricule }}</li>
+      <li><strong>N° employé:</strong> {{ employe.numero }}</li>
+      <li><strong>Fonction:</strong> {{ employe.fonction }}</li>
+    </ul>
+
+    <form method="post">
+      {% csrf_token %}
+      <a href="{% url 'personnel:employe_detail' employe.pk %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Annuler
+      </a>
+      <button type="submit" class="btn btn-success">
+        <i class="fas fa-check me-1"></i> Confirmer la réactivation
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

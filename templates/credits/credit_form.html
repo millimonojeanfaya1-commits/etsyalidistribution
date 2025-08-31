@@ -28,6 +28,10 @@
             </div>
           {% endfor %}
         {% endif %}
+        <div id="alert-magasin" class="alert alert-info d-none" role="alert">
+          <i class="fas fa-info-circle me-2"></i>
+          Veuillez d’abord sélectionner un <strong>magasin</strong> pour charger la liste des produits disponibles.
+        </div>
 
         <form method="post" id="creditForm" novalidate>
           {% csrf_token %}
@@ -70,9 +74,87 @@
       numero.setAttribute('title', 'Format attendu: CRD0001');
     }
 
-    // Min pour quantite et prix
-    if (quantite) quantite.setAttribute('min', '0.01');
-    if (prix) prix.setAttribute('min', '0.01');
+    // Min/step pour quantite et prix (entiers uniquement)
+    if (quantite) { quantite.setAttribute('min', '1'); quantite.setAttribute('step', '1'); }
+    if (prix) { prix.setAttribute('min', '1'); prix.setAttribute('step', '1'); }
+
+    // Dépendance: charger les produits selon le magasin sélectionné
+    const magasin = document.getElementById('id_magasin');
+    const produit = document.getElementById('id_produit');
+    const alertMagasin = document.getElementById('alert-magasin');
+
+    function updateAlertMagasin() {
+      if (!alertMagasin || !magasin) return;
+      const show = !magasin.value;
+      alertMagasin.classList.toggle('d-none', !show);
+    }
+
+    function resetProduits(placeholder='— Sélectionner un produit —') {
+      if (!produit) return;
+      produit.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = placeholder;
+      produit.appendChild(opt);
+      produit.value = '';
+      produit.disabled = true;
+    }
+
+    async function chargerProduits(magasinId) {
+      if (!produit) return;
+      resetProduits('Chargement...');
+      try {
+        const url = `${window.location.origin}{% url 'credits:produits_par_magasin' 0 %}`.replace('/0/', `/${magasinId}/`);
+        const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        const data = await resp.json();
+        produit.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = '— Sélectionner un produit —';
+        produit.appendChild(placeholder);
+        (data.produits || []).forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.nom;
+          produit.appendChild(opt);
+        });
+        produit.disabled = false;
+      } catch (e) {
+        resetProduits('Aucun produit disponible');
+      }
+    }
+
+    if (magasin && produit) {
+      // Si aucun magasin sélectionné au chargement, tenter de sélectionner le premier disponible
+      if (!magasin.value) {
+        const firstOption = Array.from(magasin.options).find(o => o.value);
+        if (firstOption) {
+          magasin.value = firstOption.value;
+        }
+      }
+      if (!magasin.value) {
+        resetProduits();
+      } else {
+        // Initialiser la liste si un magasin est présent (auto-sélectionné ou retour validation)
+        chargerProduits(magasin.value).then(() => {
+          // Conserver la valeur existante si présente
+          if (produit.getAttribute('data-initial')) {
+            produit.value = produit.getAttribute('data-initial');
+          }
+        });
+      }
+      magasin.addEventListener('change', function() {
+        const mid = this.value;
+        if (mid) {
+          chargerProduits(mid);
+        } else {
+          resetProduits();
+        }
+        updateAlertMagasin();
+      });
+      // Initial toggle
+      updateAlertMagasin();
+    }
 
     // Validation simple avant soumission
     const form = document.getElementById('creditForm');
@@ -96,8 +178,8 @@
         }
       }
 
-      const q = parseFloat(quantite ? quantite.value : '0') || 0;
-      const p = parseFloat(prix ? prix.value : '0') || 0;
+      const q = parseInt(quantite ? quantite.value : '0', 10) || 0;
+      const p = parseInt(prix ? prix.value : '0', 10) || 0;
       if (quantite && !(q > 0)) { quantite.classList.add('is-invalid'); valid = false; } else if (quantite) { quantite.classList.remove('is-invalid'); }
       if (prix && !(p > 0)) { prix.classList.add('is-invalid'); valid = false; } else if (prix) { prix.classList.remove('is-invalid'); }
 

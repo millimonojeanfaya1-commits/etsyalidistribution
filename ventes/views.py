@@ -3,7 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from .models import Magasin, Client, Vente, Commercial
+from stocks.models import StockActuel
 from .forms import MagasinForm, ClientForm, VenteForm
 from datetime import datetime, date as dt_date
 import re
@@ -172,6 +174,16 @@ def vente_create(request):
                         }
                     )
             
+            # Validation: le produit doit exister dans le magasin (stock actuel)
+            if magasin and produit:
+                try:
+                    exists = StockActuel.objects.filter(magasin=magasin, produit=produit).exists()
+                except Exception:
+                    exists = False
+                if not exists:
+                    messages.error(request, "Le produit sélectionné n'est pas disponible dans le magasin choisi.")
+                    raise ValueError('produit_non_disponible_dans_magasin')
+
             # Créer la vente
             if magasin and client and produit:
                 vente = Vente.objects.create(
@@ -302,3 +314,84 @@ def statistiques_ventes(request):
         'ventes_journalieres': ventes_journalieres,
     }
     return render(request, 'ventes/statistiques.html', context)
+
+
+@login_required
+def client_export_excel(request):
+    """Exporter la liste des clients (avec recherche/type) en Excel"""
+    clients = Client.objects.all().order_by('nom', 'prenom')
+
+    search = request.GET.get('search')
+    if search:
+        clients = clients.filter(
+            Q(nom__icontains=search)
+            | Q(prenom__icontains=search)
+            | Q(telephone__icontains=search)
+        )
+    type_client = request.GET.get('type_client')
+    if type_client in {'particulier', 'entreprise'}:
+        clients = clients.filter(type_client=type_client)
+
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Clients'
+    ws.append(['Nom', 'Prénom', 'Téléphone', 'Email', 'Type', 'Limite crédit', 'Crédit actuel'])
+    for c in clients:
+        ws.append([
+            c.nom,
+            c.prenom or '',
+            c.telephone or '',
+            c.email or '',
+            c.type_client,
+            float(c.limite_credit) if c.limite_credit is not None else 0,
+            float(c.credit_actuel) if c.credit_actuel is not None else 0,
+        ])
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="clients.xlsx"'
+    wb.save(response)
+    return response
+
+
+@login_required
+def vente_export_excel(request):
+    """Exporter la liste des ventes (avec filtres) en Excel"""
+    ventes = Vente.objects.select_related('magasin', 'client', 'produit').all().order_by('-date')
+
+    magasin_id = request.GET.get('magasin')
+    if magasin_id:
+        ventes = ventes.filter(magasin_id=magasin_id)
+    type_vente = request.GET.get('type_vente')
+    if type_vente in {'cash', 'credit'}:
+        ventes = ventes.filter(type_vente=type_vente)
+    date_debut = request.GET.get('date_debut')
+    date_fin = request.GET.get('date_fin')
+    if date_debut:
+        ventes = ventes.filter(date__gte=date_debut)
+    if date_fin:
+        ventes = ventes.filter(date__lte=date_fin)
+
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Ventes'
+    ws.append(['N° Vente', 'Date', 'Magasin', 'Client', 'Produit', 'Quantité', 'Unité', 'Type', 'Prix unitaire', 'Total'])
+    for v in ventes:
+        ws.append([
+            v.numero,
+            v.date.strftime('%d/%m/%Y') if v.date else '',
+            v.magasin.nom if v.magasin else '',
+            str(v.client) if v.client else '',
+            v.produit.nom if v.produit else '',
+            float(v.quantite_vendue) if v.quantite_vendue is not None else 0,
+            v.produit.unite_mesure if v.produit else '',
+            v.type_vente,
+            float(v.prix_unitaire) if v.prix_unitaire is not None else 0,
+            float(v.total_vente) if getattr(v, 'total_vente', None) is not None else (float(v.quantite_vendue or 0) * float(v.prix_unitaire or 0)),
+        ])
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="ventes.xlsx"'
+    wb.save(response)
+    return response

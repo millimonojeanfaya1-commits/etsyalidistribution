@@ -55,16 +55,9 @@
                                 <div class="input-group">
                                     <select class="form-select" id="id_magasin" name="magasin" required>
                                         <option value="">Sélectionner un magasin</option>
-                                        <option value="MAGASIN N°1">MAGASIN N°1</option>
-                                        <option value="MAGASIN N°2">MAGASIN N°2</option>
-                                        <option value="MAGASIN N°3">MAGASIN N°3</option>
-                                        <option value="MAGASIN N°4">MAGASIN N°4</option>
-                                        <option value="MAGASIN N°5">MAGASIN N°5</option>
-                                        <option value="MAGASIN N°6">MAGASIN N°6</option>
-                                        <option value="MAGASIN N°7">MAGASIN N°7</option>
-                                        <option value="MAGASIN N°8">MAGASIN N°8</option>
-                                        <option value="MAGASIN N°9">MAGASIN N°9</option>
-                                        <option value="MAGASIN N°10">MAGASIN N°10</option>
+                                        {% for m in magasins %}
+                                          <option value="{{ m.id }}">{{ m.nom }}</option>
+                                        {% endfor %}
                                     </select>
                                     <button type="button" class="btn btn-outline-primary" id="btnNouveauMagasin" title="Ajouter un nouveau magasin">
                                         <i class="fas fa-plus"></i>
@@ -72,6 +65,10 @@
                                 </div>
                                 <div class="form-text">
                                     <small>Cliquez sur + pour ajouter un nouveau magasin</small>
+                                </div>
+                                <div id="magasinHelpAlert" class="alert alert-info d-none" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Veuillez d'abord sélectionner un magasin pour afficher les produits disponibles.
                                 </div>
                             </div>
                         </div>
@@ -102,21 +99,14 @@
                         <label for="id_produit" class="form-label">Produit *</label>
                         <div class="input-group">
                             <select class="form-select" id="id_produit" name="produit" required>
-                                <option value="">Sélectionner un produit</option>
-                                <option value="RGB" data-prix="">RGB</option>
-                                <option value="PT 44" data-prix="">PT 44</option>
-                                <option value="PT 30" data-prix="">PT 30</option>
-                                <option value="PLAY 44" data-prix="">PLAY 44</option>
-                                <option value="PLAY 30" data-prix="">PLAY 30</option>
-                                <option value="CANETTE" data-prix="">CANETTE</option>
-                                <option value="PET 1.25" data-prix="">PET 1.25</option>
+                                <option value="">— Sélectionner un produit —</option>
                             </select>
                             <button type="button" class="btn btn-outline-warning" id="btnNouveauProduit" title="Ajouter un nouveau produit">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
                         <div class="form-text">
-                            <small>Cliquez sur + pour ajouter un nouveau produit</small>
+                            <small>Sélectionnez d'abord un magasin. Cliquez sur + pour ajouter un nouveau produit.</small>
                         </div>
                     </div>
                     
@@ -124,7 +114,7 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="id_quantite_vendue" class="form-label">Quantité vendue *</label>
-                                <input type="number" step="0.01" min="0.01" class="form-control" id="id_quantite_vendue" name="quantite_vendue" required>
+                                <input type="number" step="1" min="1" class="form-control" id="id_quantite_vendue" name="quantite_vendue" required>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -141,7 +131,7 @@
                             <div class="mb-3">
                                 <label for="id_prix_unitaire" class="form-label">Prix unitaire *</label>
                                 <div class="input-group">
-                                    <input type="number" step="0.01" min="0.01" class="form-control" id="id_prix_unitaire" name="prix_unitaire" required>
+                                    <input type="number" step="1" min="1" class="form-control" id="id_prix_unitaire" name="prix_unitaire" required>
                                     <span class="input-group-text">GNF</span>
                                 </div>
                             </div>
@@ -414,6 +404,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnNext = document.getElementById('btnNext');
     const btnSubmit = document.getElementById('btnSubmit');
 
+    // Dépendance magasin → produit
+    const selectMagasin = document.getElementById('id_magasin');
+    const selectProduit = document.getElementById('id_produit');
+    const magasinHelp = document.getElementById('magasinHelpAlert');
+
+    async function chargerProduits(magasinId) {
+        // Reset
+        selectProduit.innerHTML = '<option value="">— Sélectionner un produit —</option>';
+        // Réinitialiser le prix unitaire et le récapitulatif lors du changement de magasin
+        const prixInput = document.getElementById('id_prix_unitaire');
+        if (prixInput) {
+            prixInput.value = '';
+            calculerTotal();
+        }
+        if (!magasinId) {
+            if (magasinHelp) magasinHelp.classList.remove('d-none');
+            return;
+        }
+        if (magasinHelp) magasinHelp.classList.add('d-none');
+        try {
+            const url = `{% url 'credits:produits_par_magasin' 0 %}`.replace('/0/', `/${magasinId}/`);
+            const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            const produits = data.produits || [];
+            for (const p of produits) {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.nom;
+                if (p.prix_vente_conseille !== undefined && p.prix_vente_conseille !== null) {
+                    opt.setAttribute('data-prix', p.prix_vente_conseille);
+                }
+                selectProduit.appendChild(opt);
+            }
+        } catch (err) {
+            console.error('Erreur chargement produits:', err);
+        }
+    }
+
+    // Auto-sélectionner le premier magasin si aucun
+    if (selectMagasin && !selectMagasin.value) {
+        const first = Array.from(selectMagasin.options).find(o => o.value);
+        if (first) selectMagasin.value = first.value;
+    }
+    // Charger produits pour le magasin courant + écouteur
+    if (selectMagasin) {
+        chargerProduits(selectMagasin.value);
+        selectMagasin.addEventListener('change', function() {
+            chargerProduits(this.value);
+        });
+    }
+
     function showStep(n) {
         steps.forEach(step => {
             step.style.display = (parseInt(step.dataset.step) === n) ? '' : 'none';
@@ -485,8 +527,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Calculer le total automatiquement
 function calculerTotal() {
-    const quantite = parseFloat(document.getElementById('id_quantite_vendue').value) || 0;
-    const prix = parseFloat(document.getElementById('id_prix_unitaire').value) || 0;
+    const quantite = parseInt(document.getElementById('id_quantite_vendue').value, 10) || 0;
+    const prix = parseInt(document.getElementById('id_prix_unitaire').value, 10) || 0;
     const total = quantite * prix;
     
     // Mettre à jour l'affichage immédiatement
@@ -665,6 +707,14 @@ function showSuccessMessage(message) {
 
 // Validation du formulaire avant soumission
 document.getElementById('venteForm').addEventListener('submit', function(e) {
+    // Exiger un magasin sélectionné
+    const magSel = document.getElementById('id_magasin');
+    if (!magSel.value) {
+        e.preventDefault();
+        magSel.classList.add('is-invalid');
+        magSel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
     const requiredFields = document.querySelectorAll('[required]');
     let allValid = true;
     

@@ -31,6 +31,10 @@ class FournisseurForm(forms.ModelForm):
             Submit('submit', 'Enregistrer', css_class='btn btn-primary')
         )
 
+    def clean_nom(self):
+        nom = self.cleaned_data.get('nom')
+        return nom.upper().strip() if nom else nom
+
 
 class ProduitForm(forms.ModelForm):
     """
@@ -95,3 +99,7 @@ class LivraisonForm(forms.ModelForm):
             ),
             Submit('submit', 'Enregistrer la livraison', css_class='btn btn-success')
         )
+
+    def clean_numero_enregistrement(self):
+        num = self.cleaned_data.get('numero_enregistrement')
+        return num.strip().upper() if num else num

@@ -7,6 +7,10 @@ urlpatterns = [
     # Employés
     path('', views.employe_list, name='employe_list'),
     path('nouveau/', views.employe_create, name='employe_create'),
+    path('<int:pk>/', views.employe_detail, name='employe_detail'),
+    path('<int:pk>/modifier/', views.employe_update, name='employe_update'),
+    path('<int:pk>/supprimer/', views.employe_delete, name='employe_delete'),
+    path('<int:pk>/activer/', views.employe_activate, name='employe_activate'),
     
     # Paies
     path('paies/', views.paie_list, name='paie_list'),

@@ -27,6 +27,11 @@
                     <i class="fas fa-search me-2"></i>
                     Rechercher
                 </button>
+                <a href="{% url 'fournisseurs:fournisseur_export' %}{% if search %}?search={{ search|urlencode }}{% endif %}"
+                   class="btn btn-success ms-2">
+                    <i class="fas fa-file-excel me-2"></i>
+                    Exporter Excel
+                </a>
                 {% if search %}
                     <a href="{% url 'fournisseurs:fournisseur_list' %}" class="btn btn-outline-secondary ms-2">
                         <i class="fas fa-times"></i>
